@@ -11,7 +11,7 @@ const path = require('path'); const dir = process.argv[2] || path.join(__dirname
   await p.goto('file://' + dir + '/index.html');
   await p.waitForTimeout(800);
   if (shots) await p.screenshot({ path: shots + '/login.png' });
-  await p.click('.lg-user >> nth=1'); await p.fill('#lgPin', '1234'); await p.click('.lg-go'); await p.waitForTimeout(600);
+  await p.click('.lg-user >> nth=1'); await p.fill('#lgPin', '1'); await p.click('.lg-go'); await p.waitForTimeout(600);
   console.log('logged in', await p.evaluate(() => [Q.S.settings.user, Q.perm(), !!document.querySelector('#login')]));
   const routes = ['dashboard','search/구매','company/policy','company/profile','company/org','company/stake','company/issues','pmap','pmap/MP-0802','docs','docs/MD-0808','docs/_issues','clauses','clauses/7.1.5','forms','forms/MD-0804-004','forms/MD-0808-001','reg','reg/instruments','reg/suppliers','reg/risks','ncr','change4m','kpi','audit','custeval','review','training/plan','training/matrix','training/courses','training/quiz/C01','training/quals','spc','msa','guide/audit','guide/rules','guide/tools','guide/project','settings','link','link/12','docs/_revlog','clauses/8.6','search/교정'];
   for (const r of routes) {

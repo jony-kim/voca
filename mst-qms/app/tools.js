@@ -142,7 +142,7 @@
     var S = Q.S.settings;
     var saved = Q.S.registers.spcSets || [];
     var sample = S.spcText || '10.02 10.05 9.98 10.01 10.03\n10.00 9.97 10.04 10.02 9.99\n10.06 10.03 10.01 9.98 10.02\n9.99 10.01 10.00 10.04 10.03\n10.02 9.98 10.03 10.00 10.01\n10.04 10.02 9.99 10.01 10.05\n10.01 10.00 10.02 9.97 10.00\n10.03 10.05 10.01 10.02 10.04\n9.98 10.00 10.03 10.01 9.99\n10.02 10.01 9.99 10.04 10.02';
-    return '<div class="card no-print"><h2>데이터 입력 <span class="sp"></span><span class="small muted">한 줄 = 부분군 1개 · 엑셀에서 복사해 붙여넣기 가능</span></h2>' +
+    return '<div class="card no-print"><h2>데이터 입력 <span class="sp"></span><span class="small muted">한 줄 = 부분군 1개 · 엑셀에서 복사해 붙여넣기 또는 파일 올리기</span><button class="btn sm" data-act="spcFile">엑셀/CSV 올리기</button></h2>' +
       '<div class="form"><div class="fld"><label>품목 / 특성</label><input id="spcName" value="' + Q.esc(S.spcName || '') + '" placeholder="예) 브라켓 A — 외경"></div>' +
       '<div class="fld"><div class="row"><div class="fld" style="flex:1"><label>USL (규격 상한)</label><input id="spcUsl" type="number" step="any" value="' + Q.esc(S.spcUsl === undefined ? '10.10' : S.spcUsl) + '"></div>' +
       '<div class="fld" style="flex:1"><label>LSL (규격 하한)</label><input id="spcLsl" type="number" step="any" value="' + Q.esc(S.spcLsl === undefined ? '9.90' : S.spcLsl) + '"></div></div></div>' +

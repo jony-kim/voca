@@ -135,8 +135,9 @@
   Q.route('manual', '품질매뉴얼 (QM-01)', function () {
     var c = Q.S.company, d = Q.doc('QM-01') || {};
     var h = '<div class="grid g2"><div class="card"><dl class="kv"><dt>문서번호</dt><dd><span class="code">QM-01</span> <span class="badge-rev">Rev.' + E(d.rev || '01') + '</span></dd><dt>적용 표준</dt><dd>' + E(c.standard) + '</dd><dt>적용범위</dt><dd>' + E(c.scope) + '</dd><dt>적용제외</dt><dd>' + E(c.exclusions) + '</dd>' +
-      '<dt>작성 / 승인</dt><dd>' + E((c.manualRevs[0] || {}).by || '') + ' / ' + E((c.manualRevs[0] || {}).appr || '') + '</dd></dl><div class="row" style="margin-top:14px">' + dlBtn('QM-01', '매뉴얼 원본 다운로드') + '<button class="btn" data-go="company/policy">품질방침·목표</button></div></div>' +
+      '<dt>작성 / 승인</dt><dd>' + E((c.manualRevs[0] || {}).by || '') + ' / ' + E((c.manualRevs[0] || {}).appr || '') + '</dd></dl><div class="row" style="margin-top:14px">' + dlBtn('QM-01', '매뉴얼 원본 파일 받기') + '<button class="btn" data-go="company/policy">품질방침·목표</button></div></div>' +
       '<div class="card"><h2>품질방침</h2><p class="small">' + E(c.policy.intro) + '</p><ol class="small">' + c.policy.items.map(function (i) { return '<li><b>' + E(i.t) + '</b> — ' + E(i.d) + '</li>'; }).join('') + '</ol></div></div>';
+    h += Q.viewer('QM-01', { title: '품질매뉴얼 원본 보기', h: '86vh' });
     h += '<div class="card"><h2>품질목표</h2>' + Q.table([{ label: '연계 방침', k: 'policy' }, { label: '목표', k: 'name' }, { label: '목표값', k: 'target' }, { label: '책임', k: 'owner' }, { label: '평가', k: 'eval' }], c.objectives) + '</div>';
     var ch = { 4: '조직상황', 5: '리더십', 6: '기획', 7: '지원', 8: '운용', 9: '성과평가', 10: '개선' };
     h += '<div class="card"><h2>매뉴얼 구성 (ISO 9001 4~10장)</h2>' + Object.keys(ch).map(function (n) {
@@ -207,10 +208,12 @@
     var h = '<div class="grid" style="grid-template-columns:1.25fr 1fr"><div class="card"><dl class="kv"><dt>유형</dt><dd>' + E(d.level) + '</dd><dt>ISO 조항</dt><dd>' + (d.clauses || []).map(function (c) { var cl = Q.clause(c); return '<a href="#/clauses/' + E(c) + '">' + E(c + (cl ? ' ' + cl.title : '')) + '</a>'; }).join(', ') + '</dd>' +
       '<dt>주관부서</dt><dd><a href="#/org/' + E(d.owner || '') + '">' + E(d.owner || '-') + '</a></dd>' + (p && d.code !== p.code ? '<dt>상위 프로세스</dt><dd>' + docLink(p.code) + '</dd>' : '') +
       '<dt>목적</dt><dd>' + E(d.purpose || '-') + '</dd><dt>적용범위</dt><dd>' + E(d.scope || '-') + '</dd>' + (d.retention ? '<dt>기록 보존</dt><dd>' + E(d.retention) + '</dd>' : '') + '</dl>' +
-      '<div class="row" style="margin-top:14px">' + dlBtn(d.code, '원본 다운로드') + '' + '<button class="btn" data-act="docEdit" data-code="' + E(d.code) + '">정보 수정</button>' +
+      '<div class="row" style="margin-top:14px">' + dlBtn(d.code, '원본 파일 받기') + '' + '<button class="btn" data-act="docEdit" data-code="' + E(d.code) + '">정보 수정</button>' +
       (d.status === '개정중' || d.status === '제정 예정' ? '<button class="btn" data-act="docApprove" data-code="' + E(d.code) + '">' + (d.status === '제정 예정' ? '제정 승인' : '개정 승인') + '</button>' : '<button class="btn" data-act="docRevise" data-code="' + E(d.code) + '">개정 요청</button>') + '</div></div>' +
       '<div class="card"><h2>성과지표 (KPI)</h2>' + (kpis.length ? Q.table([{ label: '지표', html: function (k) { return k.txt ? E(k.name) : '<a href="#/kpi">' + E(k.name) + '</a>'; } }, { label: '목표', html: function (k) { return k.txt ? '' : Q.kpiTarget(k); } }, { label: '주기', k: function (k) { return k.cycle || ''; } }], kpis) : '<div class="empty small">연결된 KPI 없음</div>') +
       (sqChips(d.code) ? '<h3>연계 세메스 SSQ</h3><div>' + sqChips(d.code) + '</div>' : '') + '</div></div>';
+    if (d.level === '프로세스') h += Q.turtle(d.code);
+    h += Q.viewer(d.code, { title: '원본 문서 보기' });
     h += pdcaHtml(d);
     if (d.resp && d.resp.length) h += '<div class="card"><h2>책임과 권한</h2>' + Q.table([{ label: '부서/직책', k: 'who' }, { label: '책임과 권한', k: 'what' }], d.resp) + '</div>';
     if (d.steps && d.steps.length) h += '<details class="card"><summary><b>업무 절차 상세 (' + d.steps.length + '단계)</b></summary><ol class="flow" style="margin-top:12px">' + d.steps.map(function (s) {
@@ -220,7 +223,7 @@
       { label: '양식번호', html: function (f) { return '<a class="code" href="#/forms/' + E(f.code) + '">' + E(f.code) + '</a>'; } }, { label: '양식명', k: 'title' },
       { label: '구분', html: function (f) { return isNew(f) ? '<span class="badge-new">신규</span>' : '<span class="small muted">보유</span>'; } },
       { label: '연계 SSQ', html: function (f) { return sqChips(f.code); } }, { label: '작성 주기', k: function (f) { return f.cycle || ''; } },
-      { label: '', html: function (f) { return (Q.origFile(f.code) ? '<a href="' + E(Q.origFile(f.code)) + '"' + dlAttr(Q.origFile(f.code)) + '>다운로드</a> · ' : '') + '<a href="#/forms/' + E(f.code) + '">작성</a>'; } }], fs, { empty: '소속 양식 없음' }) + '</div>';
+      { label: '', html: function (f) { return '<a href="#/forms/' + E(f.code) + '">원본 보기 · 작성</a>'; } }], fs, { empty: '소속 양식 없음' }) + '</div>';
     var hist = (Q.S.docHistory[d.code] || []);
     h += '<div class="card"><h2>개정 이력</h2>' + Q.table([{ label: '일자', k: 'date' }, { label: '구분', k: 'kind' }, { label: 'Rev', k: 'rev' }, { label: '내용', k: 'text' }, { label: '처리자', k: 'by' }],
       [{ date: d.date || '', kind: '제정', rev: '0', text: isNew(d) ? '신규 제정 (세메스 SSQ 대응)' : 'ISO 9001:2015 최초 작성', by: '' }].concat(hist)) + '</div>';
@@ -234,8 +237,11 @@
   Q.routes.forms.fn = function (args) {
     var f = args[0] && Q.form(args[0]);
     if (!f || args[1]) return origForms(args);
-    var top = '<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/docs/' + E(f.doc) + '">← 문서 정보</a>' + dlBtn(f.code, '원본 다운로드') + '<button class="btn" onclick="window.print()">인쇄</button>' + (sqChips(f.code) ? '<span class="small muted" style="margin-left:8px">연계</span>' + sqChips(f.code) : '') + '</div>';
-    return top + origForms(args).replace(/^<div class="row no-print"[\s\S]*?<\/div>/, '');
+    var top = '<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/docs/' + E(f.doc) + '">← 문서 정보</a>' + dlBtn(f.code, '원본 파일 받기') + (sqChips(f.code) ? '<span class="small muted" style="margin-left:8px">연계</span>' + sqChips(f.code) : '') + '</div>';
+    var view = Q.viewer(f.code, { title: '원본 양식', sheetHint: f.title });
+    var rest = origForms(args).replace(/^<div class="row no-print"[\s\S]*?<\/div>/, '');
+    if (f.register) rest = '<div class="card"><h2>전자 대장으로 작성<span class="sp"></span><a class="btn pri sm" href="#/reg/' + E(f.register) + '">' + E((Q.REG[f.register] || {}).title || '관리대장') + ' 열기</a></h2><p class="small muted">이 양식은 관리대장(목록형)으로 운영합니다. 기존 엑셀 대장은 「엑셀/CSV 가져오기」로 한 번에 옮길 수 있습니다.</p></div>' + rest;
+    return top + view + (view ? '<h2 style="margin:22px 0 10px">전자 양식 (시스템 작성)</h2>' : '') + rest;
   };
 
   /* ───────── 3. 프로세스맵·문서체계도 ───────── */
@@ -245,10 +251,10 @@
     if (Q.proc(tab)) return origPmap(args);
     var h = Q.tabs('pm', [['map', '프로세스 맵', 'pmap/map'], ['tree', '문서체계도', 'pmap/tree'], ['rel', '프로세스 상호관계', 'pmap/rel'], ['ssq', 'SSQ↔ISO 매핑표', 'pmap/ssq']], tab);
     if (tab === 'map') {
-      var m = origPmap([]); return h + m.split('<div class="card"><h2>프로세스 상호관계표')[0];
+      var m = origPmap([]); return h + m.split('<div class="card"><h2>프로세스 상호관계표')[0] + Q.viewer('../원본_정정본/3_프로세스맵_문서체계표/프로세스 Map_ISO 9001_MST_Rev.1.pptx', { title: '프로세스맵 원본 보기', h: '72vh' });
     }
     if (tab === 'rel') { var r = origPmap([]); var i = r.indexOf('<div class="card"><h2>프로세스 상호관계표'); return h + r.slice(i) + respMatrix(); }
-    if (tab === 'ssq') return h + origLink([]);
+    if (tab === 'ssq') return h + origLink([]) + Q.viewer('../원본_정정본/9_정정내역_및_연동표/세메스SSQ_ISO_연동표.xlsx', { title: '세메스 SSQ ↔ ISO 연동표 (엑셀)', collapsed: true });
     /* 문서체계도 */
     h += '<div class="card"><p class="small" style="margin-top:0">문서 계층: <b>QM</b> 품질매뉴얼 → <b>MP</b> 프로세스 → <b>MD</b> 절차서 → <b>MI</b> 지침서 → <b>양식</b>(문서번호-3자리). 번호 CC = ISO 9001 조항(04~10), nn = 일련번호.</p><div class="tbl-wrap"><table class="tbl"><thead><tr><th>구분</th><th>프로세스</th><th>오너</th><th>절차서</th><th>소속 양식</th><th>지침서</th><th>소속 양식</th></tr></thead><tbody>';
     (S().processes || []).forEach(function (p) {
@@ -261,7 +267,7 @@
           '<td>' + (mi ? '<a class="code" href="#/docs/' + E(mi.code) + '">' + E(mi.code) + '</a><br>' + E(mi.title) : '') + '</td><td class="small">' + (mi ? formsOf(mi.code).map(function (f) { return '<a class="code" href="#/forms/' + E(f.code) + '">' + E(f.code) + '</a> ' + E(f.title); }).join('<br>') : '') + '</td></tr>';
       }
     });
-    return h + '</tbody></table></div></div>';
+    return h + '</tbody></table></div></div>' + Q.viewer('../원본_정정본/3_프로세스맵_문서체계표/프로세스_문서체계표.xlsx', { title: '문서체계표 원본 보기 (엑셀)', collapsed: true });
   };
   Q.routes.pmap.title = function (a) { return a[0] && Q.proc(a[0]) ? '프로세스 · ' + Q.proc(a[0]).name : '프로세스 맵 · 문서체계도 · 매핑'; };
   Q.routes.pmap.crumb = function (a) { return Q.proc(a[0]) ? a[0] : ''; };
@@ -430,12 +436,36 @@
         : '<div class="fld"><label>ISO 9001 조항 (번호 CC)</label><select data-chg="ndSet" data-k="clause">' + ['4', '5', '6', '7', '8', '9', '10'].map(function (c) { return '<option value="' + c + '"' + (String(st.clause || '8') === c ? ' selected' : '') + '>' + c + '장</option>'; }).join('') + '</select></div>') +
       '<div class="fld full"><label>자동 부여 번호</label><div class="bignum">' + E(code) + '</div></div>' +
       '<div class="fld full"><label>문서명</label><input id="ndTitle" placeholder="예: 클린룸 차압 점검표"></div>' +
-      '<div class="fld"><label>주관부서</label>' + Q.input({ k: 'ndDept', type: 'dept' }, '품질팀') + '</div><div class="fld"><label>관련 SSQ 항목</label><input id="ndSsq" placeholder="예: 31, 35"></div>' +
-      '<div class="fld"><label>작성 주기 (양식)</label><select id="ndCycle">' + ['매일', '매주', '매월', '분기', '반기', '년', '수시'].map(function (c) { return '<option>' + c + '</option>'; }).join('') + '</select></div><div class="fld"><label>작성자</label><input id="ndBy" value="' + E(Q.me()) + '"></div>' +
+      '<div class="fld"><label>주관부서</label>' + Q.input({ k: 'ndDept', type: 'dept' }, '품질팀') + '</div>' +
+      '<div class="fld"><label>작성자</label><select id="ndBy">' + (Q.S.users || []).map(function (u) { return '<option value="' + E(u.name) + '"' + (u.name === Q.me() ? ' selected' : '') + '>' + E(u.name + ' · ' + (u.dept || '') + (u.role ? ' ' + u.role : '')) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="fld full"><label>관련 세메스 SSQ 항목 (여러 개 선택 가능)</label><select data-chg="ndSsqAdd"><option value="">SSQ 항목 선택…</option>' + ssqOptions(st.ssq || []) + '</select>' + ssqPicked(st.ssq || []) + '</div>' +
+      '<div class="fld"><label>작성 주기 (양식)</label><select id="ndCycle">' + ['매일', '매주', '매월', '분기', '반기', '년', '수시'].map(function (c) { return '<option>' + c + '</option>'; }).join('') + '</select></div>' +
       '<div class="fld full"><label>제정 사유</label><input id="ndWhy" placeholder="예: 세메스 SSQ 32 Particle 관리 기록 신설"></div></div>' +
       '<div class="row end" style="margin-top:14px"><button class="btn pri" data-act="ndCreate" data-code="' + E(code) + '">신규 제정 등록</button></div></div>' +
       '<div class="card"><h2>번호 부여 규칙</h2><div class="rulebox">QM-01          품질매뉴얼\nMP-CCnn        프로세스        CC = ISO 9001 조항(04~10), nn = 일련번호\nMD-CCnn        절차서\nMI-CCnn        지침서\nMD-CCnn-000    절차서 소속 양식 (3자리 일련번호)\nMI-CCnn-000    지침서 소속 양식\n\n※ 접두 M = 품질경영시스템(Management System) 약호\n※ 파일명 규칙: 문서번호_문서명_V1.확장자  (예: MD-0804_공정 관리 절차서_V1.xlsx)\n※ 문서 1건 개정 시 동시 갱신: ① 문서체계표·표준목록·양식 마스터 ② 해당 문서 표지 개정이력(사유 + SSQ 항목) ③ 상호참조 문서의 「관련 표준」</div></div>';
   });
+  function ssqItems() { var ce = S().custEval, out = []; if (ce) ce.sections.forEach(function (sec) { sec.items.forEach(function (i) { out.push({ no: String(i.no), sec: sec.title || sec.name || '', it: i }); }); }); return out; }
+  function ssqOptions(picked) {
+    var ce = S().custEval; if (!ce) return '';
+    return ce.sections.map(function (sec) { return '<optgroup label="' + E(sec.title || sec.name || '') + '">' + sec.items.map(function (i) { return '<option value="' + E(i.no) + '"' + (picked.indexOf(String(i.no)) >= 0 ? ' disabled' : '') + '>SSQ ' + E(i.no) + ' · ' + E(i.sub || String(i.q || '').slice(0, 34)) + (i.knockout ? ' (과락)' : '') + '</option>'; }).join('') + '</optgroup>'; }).join('');
+  }
+  function ssqPicked(picked) {
+    if (!picked.length) return '<div class="small muted" style="margin-top:6px">선택하면 해당 SSQ 항목의 평가 질문·배점 기준·요구 증빙이 아래에 표시됩니다.</div>';
+    var all = ssqItems();
+    return '<div class="ssqpick">' + picked.map(function (n) {
+      var x = all.filter(function (a) { return a.no === n; })[0]; if (!x) return '';
+      var i = x.it;
+      return '<div class="ssqp"><div class="row"><a class="sqchip" href="#/link/' + E(n) + '">SSQ ' + E(n) + '</a><b>' + E(i.sub || x.sec) + '</b>' + (i.knockout ? Q.chip('과락', 'crit') : '<span class="small muted">' + E(i.points) + '점</span>') + (i.clause ? '<span class="small muted">ISO ' + E(i.clause) + '</span>' : '') + '<span class="sp"></span><button class="btn sm" data-act="ndSsqDel" data-n="' + E(n) + '">빼기</button></div>' +
+        '<div class="small" style="margin:6px 0">' + E(i.q || '') + '</div>' +
+        ((i.criteria || []).length ? '<ul class="small muted" style="margin:0 0 4px 18px;padding:0">' + i.criteria.map(function (c) { return '<li>' + (c.score !== undefined && c.score !== '' ? '<b>' + E(c.score) + '점</b> ' : '') + E(c.text) + '</li>'; }).join('') + '</ul>' : '') +
+        (i.evidence ? '<div class="small"><b>요구 증빙</b> ' + E(i.evidence) + '</div>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+  Q.on('ndSsqAdd', function (el) { if (!el.value) return; var st = Q.S.settings.newdoc = Q.S.settings.newdoc || { kind: '양식', parent: 'MD-0804' }; keepInputs(); st.ssq = (st.ssq || []).concat([el.value]); Q.save(); Q.rerender(); restoreInputs(); });
+  Q.on('ndSsqDel', function (el) { var st = Q.S.settings.newdoc || {}; keepInputs(); st.ssq = (st.ssq || []).filter(function (n) { return n !== el.getAttribute('data-n'); }); Q.save(); Q.rerender(); restoreInputs(); });
+  var ndKeep = null;
+  function keepInputs() { ndKeep = {}; ['#ndTitle', '#ndWhy', '#ndCycle', '#ndBy', '[name="ndDept"]'].forEach(function (s) { var e = Q.$(s); if (e) ndKeep[s] = e.value; }); }
+  function restoreInputs() { if (!ndKeep) return; Object.keys(ndKeep).forEach(function (s) { var e = Q.$(s); if (e) e.value = ndKeep[s]; }); ndKeep = null; }
   function nextCode(kind, parent, clause) {
     if (kind === '양식') {
       var used = (S().forms || []).map(function (f) { return f.code; }).concat(Object.keys(Q.S.newForms || {})).filter(function (c) { return c.indexOf(parent + '-') === 0; }).map(function (c) { return +c.slice(-3); });
@@ -447,7 +477,7 @@
   Q.on('ndCreate', function (el) {
     var code = el.getAttribute('data-code'), st = Q.S.settings.newdoc || {}, title = Q.$('#ndTitle').value.trim();
     if (!title) { Q.toast('문서명을 입력하세요'); return; }
-    var dept = Q.$('[name="ndDept"]').value, why = Q.$('#ndWhy').value, ssq = Q.$('#ndSsq').value.split(/[,\s]+/).filter(Boolean);
+    var dept = Q.$('[name="ndDept"]').value, why = Q.$('#ndWhy').value, ssq = (st.ssq || []).slice(), by = (Q.$('#ndBy') || {}).value || Q.me();
     if (st.kind === '양식') {
       var f = { code: code, title: title, doc: st.parent, cycle: Q.$('#ndCycle').value, proposed: true, approval: ['작성', '검토', '승인'] };
       (Q.S.userForms = Q.S.userForms || []).push(f); window.SEED.forms.push(f);
@@ -456,7 +486,8 @@
       var d = { code: code, title: title, level: st.kind, process: (Q.doc(st.parent) || {}).process || 'MP-0803', owner: dept, clauses: [String(st.clause || 8)], rev: '0', date: Q.today(), status: '제정 예정', steps: [], resp: [], proposed: true };
       Q.S.docs.push(d);
     }
-    Q.histAdd(code, '제정', '0', why || '신규 제정'); Q.save(); Q.toast(code + ' 등록 — 문서체계에 반영했습니다'); Q.go(st.kind === '양식' ? 'forms/' + code : 'docs/' + code);
+    st.ssq = [];
+    Q.histAdd(code, '제정', '0', (why || '신규 제정') + (ssq.length ? ' (SSQ ' + ssq.join(', ') + ')' : ''), by); Q.save(); Q.toast(code + ' 등록 — 문서체계에 반영했습니다'); Q.go(st.kind === '양식' ? 'forms/' + code : 'docs/' + code);
   });
 
   /* ───────── 정합성 검증·제개정 기록 ───────── */

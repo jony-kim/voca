@@ -396,9 +396,9 @@
       Q.S.docs.push(o); Q.histAdd(o.code, '제정', o.rev, '신규 등록'); Q.save(); Q.go('docs/' + encodeURIComponent(o.code));
     } }]);
   });
-  Q.histAdd = function (code, kind, rev, text) {
+  Q.histAdd = function (code, kind, rev, text, by) {
     var h = Q.S.docHistory[code] = Q.S.docHistory[code] || [];
-    h.unshift({ date: Q.today(), kind: kind, rev: rev, text: text, by: Q.me() });
+    h.unshift({ date: Q.today(), kind: kind, rev: rev, text: text, by: by || Q.me() });
   };
 
   function docDetail(d) {
@@ -494,17 +494,17 @@
       return '<div class="row no-print" style="margin-bottom:12px"><a href="#/clauses">← 조항 맵</a></div><div class="card"><h2>' + E(c.no) + ' ' + E(c.title) + (c.doc ? ' ' + Q.chip(c.doc, 'warn') : '') + '</h2><p>' + E(c.summary) + '</p>' +
         (c.manual ? '<h3>MST 품질매뉴얼 규정</h3><p class="muted">' + E(c.manual) + '</p>' : '') + '</div>' +
         '<div class="grid g2"><div class="card"><h2>관련 문서</h2>' + Q.table([{ label: '번호', html: function (d) { return '<a href="#/docs/' + E(d.code) + '">' + E(d.code) + '</a>'; } }, { label: '문서명', k: 'title' }], docs, { empty: '연결 문서 없음' }) + '</div>' +
-        '<div class="card"><h2>증거 (기록)</h2>' + Q.table([{ label: '출처', k: 'label' }, { label: '건수', n: 1, html: function (e) { return e.n ? '<b>' + e.n + '</b>' : '<span style="color:var(--crit)">0</span>'; } }], ev, { empty: '증거 출처 미정의' }) + '</div></div>' +
+        '<div class="card"><h2>운영 기록 (실행 증거)</h2>' + Q.table([{ label: '출처', k: 'label' }, { label: '건수', n: 1, html: function (e) { return e.n ? '<b>' + e.n + '</b>' : '<span style="color:var(--crit)">0</span>'; } }], ev, { empty: '증거 출처 미정의' }) + '</div></div>' +
         (cks.length ? '<div class="card"><h2>내부심사 체크 질문</h2><ol>' + cks.map(function (i) { return '<li>' + E(i.q) + '</li>'; }).join('') + '</ol></div>' : '') + ssqCard(c.no);
     }
     var cov = Q.coverage();
-    return '<div class="tiles">' + cov.byChapter.map(function (c) { return '<div class="tile ' + (c.pct >= 90 ? 'good' : c.pct >= 60 ? 'warn' : 'crit') + '"><div class="k">' + c.ch + '. ' + c.title + '</div><div class="v">' + c.pct + '%</div><div class="s">' + c.ok + '/' + c.total + ' 조항 증거 있음</div></div>'; }).join('') + '</div>' +
-      '<div class="card"><h2>조항별 문서·증거 매트릭스</h2>' + Q.table([
+    return '<div class="tiles">' + cov.byChapter.map(function (c) { return '<div class="tile ' + (c.pct >= 90 ? 'good' : 'warn') + '"><div class="k">' + c.ch + '. ' + c.title + '</div><div class="v">' + c.pct + '%<small style="font-size:12px;font-weight:500;margin-left:6px">운영 기록</small></div><div class="s">문서 구비 ' + c.total + '/' + c.total + ' · 운영 기록 ' + c.ok + '/' + c.total + '</div></div>'; }).join('') + '</div>' +
+      '<div class="card"><h2>조항별 문서·운영 기록 매트릭스</h2><p class="small muted" style="margin-top:-4px">문서(규정)는 모든 조항에 구비되어 있습니다. <b>운영 기록</b>은 이 시스템에서 양식·대장·KPI·심사 등을 작성하면 자동 집계되는 「실행 증거」입니다. 작성 대기 = 아직 입력된 기록이 없음 (아래 줄에 작성할 기록 표시).</p>' + Q.table([
         { label: '조항', html: function (c) { return '<a href="#/clauses/' + E(c.no) + '"><b class="mono">' + E(c.no) + '</b></a>'; } },
         { label: '제목', k: 'title' },
         { label: '문서화 요구', html: function (c) { return c.doc ? Q.chip(c.doc, c.doc.indexOf('유지') >= 0 ? 'mp' : 'acc') : ''; } },
-        { label: '관련 문서', k: function (c) { return (c.docs || []).join(', '); } },
-        { label: '증거', html: function (c) { var ev = Q.clauseEvidence(c.no), n = ev.reduce(function (s, e) { return s + e.n; }, 0); return ev.length ? (n ? Q.chip(n + '건', 'good') : Q.chip('없음', 'crit')) : Q.chip('-', ''); } }
+        { label: '관련 문서', html: function (c) { return (c.docs || []).map(function (k) { return '<a class="code" href="#/docs/' + E(k) + '">' + E(k) + '</a>'; }).join(', ') + ((c.docs || []).length ? ' ' + Q.chip('문서 구비', 'good') : ''); } },
+        { label: '운영 기록', html: function (c) { var ev = Q.clauseEvidence(c.no), n = ev.reduce(function (s, e) { return s + e.n; }, 0); var tip = ev.map(function (e) { return e.label; }).join(', '); return ev.length ? (n ? Q.chip(n + '건', 'good') : Q.chip('작성 대기', 'warn') + '<div class="small muted">' + E(tip) + '</div>') : Q.chip('-', ''); } }
       ], cls, { rowAttr: function (c) { return ' class="click" data-go="clauses/' + E(c.no) + '"'; } }) + '</div>';
   });
 

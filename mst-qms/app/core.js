@@ -106,7 +106,10 @@
     if (Q.native) raw = Q.native.readData();
     else { try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; } }
     var st = emptyState();
-    if (raw) { try { var p = JSON.parse(raw); Object.keys(p).forEach(function (k) { st[k] = p[k]; }); } catch (e) { console.error(e); Q.toast('저장 데이터 읽기 실패 — 백업에서 복원하세요'); } }
+    /* 대표이사 성명 정정(김맹권 → 김명권) — 이전 저장본에도 반영, PIN 은 초기값(1)으로 */
+    var fixName = raw && raw.indexOf('김맹권') >= 0;
+    if (fixName) raw = raw.replace(/김맹권/g, '김명권');
+    if (raw) { try { var p = JSON.parse(raw); if (fixName) (p.users || []).forEach(function (u) { if (u.name === '김명권') delete u.pin; }); Object.keys(p).forEach(function (k) { st[k] = p[k]; }); } catch (e) { console.error(e); Q.toast('저장 데이터 읽기 실패 — 백업에서 복원하세요'); } }
     Q.S = applySeed(st);
     Q.save(true);
   };

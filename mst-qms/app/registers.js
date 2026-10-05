@@ -95,8 +95,9 @@
     var list = rows.filter(function (r) { return Q.match(r, q); });
     var h = '<div class="card"><h2>' + E(rd.title) + ' <span class="chip">' + E(rd.form) + '</span> <span class="chip acc">ISO ' + E(rd.clause) + '</span><span class="sp"></span>' +
       '<input data-inp="regQ" data-key="' + key + '" placeholder="검색" value="' + E(q) + '" style="padding:5px 9px;border:1px solid var(--line-2);border-radius:6px;width:140px">' +
-      '<button class="btn sm" data-act="regCsv" data-key="' + key + '">CSV</button><button class="btn sm" data-act="regImport" data-key="' + key + '">CSV 가져오기</button><button class="btn sm pri" data-act="regAdd" data-key="' + key + '">추가</button></h2>' +
+      '<button class="btn sm" data-act="regCsv" data-key="' + key + '">CSV 내보내기</button><button class="btn sm" data-act="regImport" data-key="' + key + '" title="기존 엑셀 대장(.xlsx) 또는 CSV를 올리면 머리글을 자동 인식해 한 번에 등록">엑셀/CSV 올리기</button><button class="btn sm pri" data-act="regAdd" data-key="' + key + '">추가</button></h2>' +
       (rd.note ? '<p class="small muted">' + E(rd.note) + '</p>' : '') +
+      (!embed && !rows.length ? '<div class="hint small" style="margin:0 0 10px">기존에 엑셀로 관리하던 「' + E(rd.title) + '」이 있으면 <b>엑셀/CSV 올리기</b>로 파일을 그대로 올리세요 — 머리글(열 이름)을 자동으로 찾아 한 번에 등록합니다. 새로 시작하면 <b>추가</b>로 한 건씩 입력합니다. <a href="javascript:void 0" data-act="regTpl" data-key="' + key + '">가져오기 양식(머리글) 받기</a></div>' : '') +
       Q.table(rd.cols.map(function (k) {
         return { label: colLabel(rd, k), html: function (r) {
           var v = r[k];
@@ -105,7 +106,8 @@
           return E(v === undefined ? '' : v);
         } };
       }).concat([{ label: '', html: function (r) { return (r.photos && r.photos.length ? '📷' + r.photos.length + ' ' : '') + (rd.ncr && !r.ncrNo ? '<button class="btn sm" data-act="regToNcr" data-key="' + key + '" data-id="' + r.id + '">부적합 등록</button>' : ''); } }]),
-      list, { rowAttr: function (r) { return ' class="click" data-act="regEdit" data-key="' + key + '" data-id="' + r.id + '"'; }, max: embed ? 420 : 0 }) + '</div>';
+      list, { rowAttr: function (r) { return ' class="click" data-act="regEdit" data-key="' + key + '" data-id="' + r.id + '"'; }, max: embed ? 420 : 0, empty: '등록된 항목이 없습니다 — 엑셀/CSV 올리기 또는 추가' }) + '</div>';
+    if (!embed && Q.viewer) h += Q.viewer(rd.form, { title: '원본 양식 (' + rd.form + ')', sheetHint: rd.title, collapsed: true });
     return h;
   };
   Q.on('regQ', function (el) {
@@ -194,7 +196,7 @@
       }).join('');
     }).join('') + '</div>';
     if (cur) h += Q.regView(cur);
-    else h += '<div class="empty">관리할 대장을 선택하세요. 기존 엑셀 대장은 CSV로 저장 후 "CSV 가져오기"로 옮길 수 있습니다.</div>';
+    else h += '<div class="empty">관리할 대장을 선택하세요. 관리대장은 원본 엑셀 양식(목록형)을 시스템에서 직접 기록·검색·기한 알림하는 전자 대장입니다. 기존 엑셀 파일은 「엑셀/CSV 올리기」로 그대로 옮길 수 있습니다.</div>';
     return h;
   });
   Q.route('change4m', '4M 변경관리', function () {
