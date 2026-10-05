@@ -169,7 +169,7 @@
     var title = typeof rt.title === 'function' ? rt.title(r.args) : rt.title;
     Q.$('#title').textContent = title;
     document.title = title + ' · MST QMS';
-    try { page.innerHTML = rt.fn(r.args) || ''; }
+    try { var body = rt.fn(r.args) || ''; page.innerHTML = (Q.pageHead && !rt.opt.noHead ? Q.pageHead(r, rt, title) : '') + body; }
     catch (e) { console.error(e); page.innerHTML = '<div class="card"><h2>화면 오류</h2><pre class="pre small">' + Q.esc(e.stack || e) + '</pre></div>'; }
     if (rt.after) rt.after(r.args);
     (Q.afterRender || []).splice(0).forEach(function (f) { try { f(); } catch (e) { console.error(e); } });

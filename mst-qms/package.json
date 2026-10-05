@@ -18,7 +18,8 @@
   "build": {
     "appId": "kr.co.mst.qms",
     "productName": "MST QMS",
-    "files": ["electron/**", "app/**", "package.json"],
+    "files": ["electron/**", "app/**", "원본_정정본/**", "!원본_정정본/_logs/**", "package.json"],
+    "asar": false,
     "directories": { "output": "dist" },
     "win": { "target": ["nsis", "portable"] },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "shortcutName": "MST QMS" },

@@ -11,15 +11,19 @@
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="brand"><b>MST QMS</b><span>주식회사 엠에스티 · ISO 9001:2015</span></div>
+    <div class="brand"><img src="img/mst-logo.png" alt="MST"><div><b>주식회사 엠에스티</b><span>품질경영시스템 V1</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-foot"><span id="userBadge" data-go="settings" style="cursor:pointer"></span><button class="btn sm ghost" data-act="logout" title="로그아웃">⏻</button><span class="sp"></span><span id="savedAt"></span></div>
+    <div class="side-foot"><span>V1 · 2026-10-05<br>사내 전용 · 무단 반출 금지</span><span class="sp"></span><span id="savedAt"></span></div>
   </aside>
   <main class="main">
     <div class="top">
       <button class="btn sm menu-btn" data-act="menu">☰</button>
-      <h1 id="title">MST QMS</h1>
-      <div class="search no-print"><input id="topSearch" placeholder="통합 검색 (Ctrl+K)"></div>
+      <div class="search no-print"><input id="topSearch" placeholder="문서번호·문서명·양식·SSQ항목 검색 (예: MD-0811, 교정, SSQ 12)"></div>
+      <span class="sp"></span>
+      <span class="role" id="userBadge" data-go="settings" style="cursor:pointer"></span>
+      <div class="seg no-print" id="themeSeg"><button data-act="theme" data-t="light">화이트</button><button data-act="theme" data-t="mid">중간</button><button data-act="theme" data-t="dark">다크</button></div>
+      <button class="btn no-print" data-act="logout">로그아웃</button>
+      <h1 id="title" hidden></h1>
     </div>
     <div class="page" id="page"></div>
   </main>
@@ -32,6 +36,7 @@
 <script src="data/seed-link.js"></script>
 <script src="data/seed-gap.js"></script>
 <script src="data/seed-targets.js"></script>
+<script src="data/originals.js"></script>
 <script src="core.js"></script>
 <script src="pages.js"></script>
 <script src="registers.js"></script>
@@ -39,6 +44,7 @@
 <script src="tools.js"></script>
 <script src="link.js"></script>
 <script src="login.js"></script>
+<script src="portal.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

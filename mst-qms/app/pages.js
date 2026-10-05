@@ -73,7 +73,7 @@
     Q.$$('[data-badge]').forEach(function (el) { var n = map[el.getAttribute('data-badge')]; el.hidden = !n; el.textContent = n || ''; });
   };
   Q.prevMonth = function () { var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
-  Q.kpiTarget = function (k) { return Q.num(k.target) === null ? '<span class="chip warn">목표 미설정</span>' : (k.dir === 'down' ? '≤' : '≥') + E(k.target) + E(k.unit || '') + (k.provisional ? ' <span class="chip warn" title="임시 목표 — 업체 확정 필요">가목표</span>' : ''); };
+  Q.kpiTarget = function (k) { return Q.num(k.target) === null ? '<span class="chip warn">목표 미설정</span>' : (k.dir === 'down' ? '≤' : '≥') + E(k.target) + E(k.unit || '') + (k.provisional ? ' <span class="chip warn" title="초기 목표 — 업체 확정 전">초기 목표</span>' : ''); };
   Q.kpiOk = function (k, v) {
     v = Q.num(v); if (v === null) return true;
     var t = Q.num(k.target); if (t === null) return true;
@@ -525,14 +525,14 @@
     var h = '<div class="card no-print"><div class="row"><button class="btn sm" data-go="kpi/' + (y - 1) + '">◀ ' + (y - 1) + '</button><b style="font-size:16px">' + y + '년</b><button class="btn sm" data-go="kpi/' + (y + 1) + '">' + (y + 1) + ' ▶</button><span class="sp"></span>' +
       '<button class="btn" data-act="kpiCsv" data-y="' + y + '">MD-0901-004 실적현황 CSV</button><button class="btn pri" data-act="kpiNew">지표 추가</button></div></div>';
     var prov = (S.kpis || []).filter(function (k) { return k.provisional; }).length;
-    if (prov) h += '<div class="card" style="border-left:3px solid var(--warn)"><div class="row"><div style="flex:1"><b>가목표 ' + prov + '개</b><div class="small muted">원본 KPI 시트에 목표값이 비어 있어 업계 통상 수준으로 임시 목표를 넣었습니다. 노란 칸의 숫자를 고치면 업체 확정 목표로 바뀌고, 지금 값 그대로 쓰려면 "확정"을 누르세요. 변경 이력은 지표별로 남습니다.</div></div><button class="btn" data-act="kpiConfirmAll">가목표 전체 확정</button></div></div>';
+    if (prov) h += '<div class="card" style="border-left:3px solid var(--warn)"><div class="row"><div style="flex:1"><b>초기 목표 ' + prov + '개</b><div class="small muted">원본 KPI 시트에 목표값이 비어 있어 업계 통상 수준으로 임시 목표를 넣었습니다. 노란 칸의 숫자를 고치면 업체 확정 목표로 바뀌고, 지금 값 그대로 쓰려면 "확정"을 누르세요. 변경 이력은 지표별로 남습니다.</div></div><button class="btn" data-act="kpiConfirmAll">초기 목표 전체 확정</button></div></div>';
     h += '<div class="card"><h2>성과지표 목표대비 실적현황 (MD-0901-004) <span class="sp"></span><span class="small muted">실적·목표 셀에 직접 입력 · 자동 저장</span></h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>프로세스</th><th>지표</th><th>목표</th>' +
       months.map(function (m) { return '<th>' + (+m.slice(5)) + '월</th>'; }).join('') + '<th>누계/평균</th><th>달성률</th><th></th></tr></thead><tbody>' +
       (S.kpis || []).map(function (k) {
         var a = S.kpiActuals[k.id] || {}, vals = months.map(function (m) { return Q.num(a[m]); }).filter(function (v) { return v !== null; });
         var agg = vals.length ? (k.agg === 'sum' ? vals.reduce(function (s, v) { return s + v; }, 0) : vals.reduce(function (s, v) { return s + v; }, 0) / vals.length) : null;
         var okN = months.filter(function (m) { return Q.num(a[m]) !== null && Q.kpiOk(k, a[m]); }).length;
-        return '<tr><td style="min-width:90px">' + E((Q.proc(k.proc) || {}).name || k.proc || '') + '</td><td style="min-width:220px"><b>' + E(k.name) + '</b><div class="small muted">' + E(k.formula || '') + '</div></td><td class="n" style="white-space:nowrap">' + (k.dir === 'down' ? '≤' : '≥') + '<input class="mono" style="width:64px;' + (k.provisional ? 'border-color:var(--warn);background:var(--warn-soft)' : '') + '" title="' + E(k.targetText || '') + (k.provisional ? ' (가목표 — 수정하면 확정)' : '') + '" data-chg="kpiTarget" data-k="' + E(k.id) + '" value="' + E(k.target === null || k.target === undefined ? '' : k.target) + '">' + E(k.unit || '') + (k.provisional ? '<div><span class="chip warn">가목표</span> <button class="btn sm ghost" data-act="kpiConfirm" data-k="' + E(k.id) + '" title="현재 값으로 확정">확정</button></div>' : '') + '</td>' +
+        return '<tr><td style="min-width:90px">' + E((Q.proc(k.proc) || {}).name || k.proc || '') + '</td><td style="min-width:220px"><b>' + E(k.name) + '</b><div class="small muted">' + E(k.formula || '') + '</div></td><td class="n" style="white-space:nowrap">' + (k.dir === 'down' ? '≤' : '≥') + '<input class="mono" style="width:64px;' + (k.provisional ? 'border-color:var(--warn);background:var(--warn-soft)' : '') + '" title="' + E(k.targetText || '') + (k.provisional ? ' (초기 목표 — 수정하면 확정)' : '') + '" data-chg="kpiTarget" data-k="' + E(k.id) + '" value="' + E(k.target === null || k.target === undefined ? '' : k.target) + '">' + E(k.unit || '') + (k.provisional ? '<div><span class="chip warn">초기 목표</span> <button class="btn sm ghost" data-act="kpiConfirm" data-k="' + E(k.id) + '" title="현재 값으로 확정">확정</button></div>' : '') + '</td>' +
           months.map(function (m) { var v = a[m]; var bad = Q.num(v) !== null && !Q.kpiOk(k, v); return '<td style="padding:3px"><input class="mono" style="width:58px;' + (bad ? 'color:var(--crit);font-weight:700' : '') + '" data-chg="kpiSet" data-k="' + E(k.id) + '" data-m="' + m + '" value="' + E(v === undefined || v === null ? '' : v) + '"></td>'; }).join('') +
           '<td class="n">' + Q.fmt(agg) + '</td><td class="n">' + (vals.length ? Math.round(100 * okN / vals.length) + '%' : '-') + '</td><td><button class="btn sm ghost" data-act="kpiEdit" data-k="' + E(k.id) + '">⋯</button></td></tr>';
       }).join('') + '</tbody></table></div><p class="small muted" style="margin-top:8px">달성률 = 목표 달성 월 수 ÷ 입력 월 수. 붉은 값은 목표 미달 — 미달 시 부적합·시정조치(MD-1002) 또는 개선활동(MD-1001)으로 연결하세요.</p></div>';
@@ -547,7 +547,7 @@
   function kpiById(id) { return Q.S.kpis.filter(function (x) { return x.id === id; })[0]; }
   function confirmTarget(k, from) {
     k.targetLog = k.targetLog || [];
-    k.targetLog.push({ date: Q.today(), by: Q.me(), from: from, to: k.target, note: k.provisional ? '가목표 확정' : '목표 변경' });
+    k.targetLog.push({ date: Q.today(), by: Q.me(), from: from, to: k.target, note: k.provisional ? '초기 목표 확정' : '목표 변경' });
     k.provisional = false; k.targetText = '';
   }
   Q.on('kpiTarget', function (el) {
@@ -557,7 +557,7 @@
   });
   Q.on('kpiConfirm', function (el) { var k = kpiById(el.getAttribute('data-k')); confirmTarget(k, k.target); Q.save(); Q.rerender(); });
   Q.on('kpiConfirmAll', function () {
-    Q.confirm('가목표를 모두 현재 값으로 확정할까요?', function () { Q.S.kpis.forEach(function (k) { if (k.provisional) confirmTarget(k, k.target); }); Q.save(); Q.rerender(); });
+    Q.confirm('초기 목표를 모두 현재 값으로 확정할까요?', function () { Q.S.kpis.forEach(function (k) { if (k.provisional) confirmTarget(k, k.target); }); Q.save(); Q.rerender(); });
   });
   Q.on('kpiSet', function (el) {
     var k = el.getAttribute('data-k'), m = el.getAttribute('data-m');

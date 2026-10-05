@@ -23,7 +23,7 @@
         { k: 'owner', label: '담당', type: 'dept' }, { k: 'due', label: '기한', type: 'date' }, { k: 'effect', label: '효과성 평가', type: 'textarea', rows: 2 }, { k: 'status', label: '상태', type: 'select', options: ['계획', '진행', '완료'], def: '계획' }],
       cols: ['proc', 'type', 'risk', 'score', 'grade', 'treat', 'owner', 'due', 'status'],
       calc: function (r) { r.score = (+r.L || 0) * (+r.S || 0); r.grade = r.score >= 15 ? '상' : r.score >= 8 ? '중' : r.score ? '하' : ''; },
-      colLabels: { score: '점수(L×S)', grade: '등급' }, note: '평가 기준(MI-0601-002) [권장]: 점수 = 발생가능성 × 영향도. 15 이상 상(즉시 조치), 8~14 중(계획 조치), 7 이하 하(모니터링).' },
+      colLabels: { score: '점수(L×S)', grade: '등급' }, note: '평가 기준(MI-0601-002): 점수 = 발생가능성 × 영향도. 15 이상 상(즉시 조치), 8~14 중(계획 조치), 7 이하 하(모니터링).' },
     { key: 'equipment', title: '설비 등록 관리대장', form: 'MD-0804-002', clause: '7.1.3', titleKey: 'name', due: 'next', dueLabel: '설비 예방점검',
       fields: [{ k: 'no', label: '설비번호', req: true }, { k: 'name', label: '설비명', req: true }, { k: 'model', label: '모델/규격' }, { k: 'maker', label: '제작사' }, { k: 'intro', label: '도입일', type: 'date' },
         { k: 'loc', label: '설치 위치' }, { k: 'owner', label: '담당자', type: 'user' }, { k: 'cycle', label: '예방점검 주기(개월)', type: 'number', def: 3 }, { k: 'last', label: '최근 점검일', type: 'date' }, { k: 'next', label: '차기 점검일', type: 'date', hint: '비우면 최근 점검일 + 주기로 자동 계산' },
@@ -46,7 +46,7 @@
         { k: 'evalDate', label: '평가일', type: 'date' }, { k: 'nextEval', label: '차기 평가일', type: 'date' }, { k: 'remark', label: '후속 조치', type: 'textarea', rows: 2 }],
       cols: ['name', 'item', 'kind', 'total', 'grade', 'evalDate', 'nextEval'], colLabels: { total: '총점', grade: '등급' },
       calc: function (r) { var t = ['q', 'd', 'p', 'c'].reduce(function (s, k) { return s + (Q.num(r[k]) || 0); }, 0); r.total = t || ''; r.grade = t ? GRADE(t) : ''; if (r.evalDate && !r.nextEval) r.nextEval = Q.addDays(r.evalDate, 182); },
-      note: '등급 기준 [권장]: A ≥90, B ≥80, C ≥70, D <70. 품질목표 = 전 협력사 B등급 이상. C 이하는 개선 요구, D는 거래 재검토.' },
+      note: '등급 기준: A ≥90, B ≥80, C ≥70, D <70. 품질목표 = 전 협력사 B등급 이상. C 이하는 개선 요구, D는 거래 재검토.' },
     { key: 'partApprovals', title: '제품(부품) 승인 관리 대장', form: 'MI-0807-002', clause: '8.4', titleKey: 'part',
       fields: [{ k: 'part', label: '품번/품명', req: true }, { k: 'supplier', label: '공급자' }, { k: 'req', label: '승인 요청일', type: 'date' }, { k: 'docs', label: '제출 자료 (성적서·도면 등)' }, { k: 'appr', label: '승인일', type: 'date' }, { k: 'result', label: '판정', type: 'select', options: ['승인', '조건부', '불승인'] }, { k: 'by', label: '승인자', type: 'user' }],
       cols: ['part', 'supplier', 'req', 'appr', 'result', 'by'] },
@@ -265,6 +265,22 @@
       var x = dd[doc.code]; if (!x) return;
       Object.keys(x).forEach(function (k) { if (x[k] !== undefined && x[k] !== '' && !(Array.isArray(x[k]) && !x[k].length)) doc[k] = x[k]; });
     });
+    /* 고객 배포용 정리: 추출 과정의 내부 메모·원문 표기 제거 */
+    var clean = function (t) {
+      if (typeof t !== 'string') return t;
+      return t.replace(/\s*\((?:[^()]*?)(원본|원문|추정|확인 ?필요|예시 기준|미기재|공란)(?:[^()]*?)\)/g, '')
+        .replace(/\s*\[(권장|주|원문|추정)\]\s*/g, ' ').replace(/\s*—?\s*원본 참조/g, '').replace(/\s*고정 항목은 [^.]*예시 기준/g, '').replace(/\s{2,}/g, ' ').trim();
+    };
+    var cleanRet = function (r) { return !r || /공란|미기재|원문|없음/.test(r) ? '문서화된 정보 관리 절차서(MD-0702)에 따름' : clean(r); };
+    S.forms.forEach(function (f) { f.purpose = clean(f.purpose); if (f.retention) f.retention = cleanRet(f.retention); delete f.note; });
+    (S.documents || []).forEach(function (d) {
+      ['purpose', 'scope'].forEach(function (k) { d[k] = clean(d[k]); });
+      if (d.retention) d.retention = cleanRet(d.retention);
+      (d.steps || []).forEach(function (st) { st.d = clean(st.d); st.t = clean(st.t); });
+      delete d.notes;
+    });
+    (S.kpis || []).forEach(function (k) { delete k.note; k.method = clean(k.method); });
+    Q.REG_LIST.forEach(function (rd) { if (rd.note) rd.note = clean(rd.note).replace(/^평가 기준\(MI-0601-002\)\s*:/, '평가 기준(MI-0601-002):'); });
     S.kpis = (S.objectiveKpis || []).concat(S.kpis || []);
     S.registerSeed = S.registerSeed || {};
   };

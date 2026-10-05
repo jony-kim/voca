@@ -4,7 +4,7 @@
   var Q = window.Q, E = Q.esc;
 
   /* ───────── 내부심사 (MD-0902) ───────── */
-  var RISK = { L: 10, M: 5, H: 0 };   /* 문항점수 = 가중치 × RISK(L 양호 10 · M 보완 5[권장] · H 미흡 0) */
+  var RISK = { L: 10, M: 5, H: 0 };   /* 문항점수 = 가중치 × RISK(L 양호 10 · M 보완 5 · H 미흡 0) */
   var GRADES = ['중부적합', '경부적합', '관찰사항'];
   function ckById(id) { return (Q.S.checklists || []).filter(function (c) { return c.id === id; })[0]; }
   function auditScore(a) {
@@ -127,7 +127,7 @@
     { k: 'req', label: '① 요구사항', type: 'textarea', rows: 2 }, { k: 'evidence', label: '② 객관적 증거', type: 'textarea', rows: 2 }, { k: 'text', label: '③ 부적합 진술', type: 'textarea', rows: 2, req: true },
     { k: 'due', label: '시정 기한', type: 'date' }, { k: 'status', label: '상태', type: 'select', options: ['접수', '조치중', '종결'], def: '접수' }];
   Q.on('findNew', function (el) {
-    var a = audById(el.getAttribute('data-id')), no = el.getAttribute('data-no'), pre = { due: Q.addDays(Q.today(), 30), grade: '경부적합', dept: (a.depts || [])[0] };
+    var a = audById(el.getAttribute('data-id')), no = el.getAttribute('data-no'), pre = { due: Q.addDays(Q.today(), 30), grade: '경부적합', dept: (a.depts || [])[0] || ((Q.S.users || []).filter(function (u) { return u.name === Q.me(); })[0] || {}).dept || '품질팀' };
     if (no) {
       var it = null; (ckById(a.checklist) || { sections: [] }).sections.forEach(function (s) { s.items.forEach(function (x) { if (String(x.no) === String(no)) it = x; }); });
       var r = (a.results || {})[no] || {};
