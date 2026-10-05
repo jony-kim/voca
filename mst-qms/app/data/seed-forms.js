@@ -174,11 +174,11 @@ window.SEED = window.SEED || {};
       url: G + '1nkhHetfRNTkf0_MzzSr1ohlLGKtVq8xr9HfdVtXU4v0', srcTitle: 'MP_경영관리_SWOT분석표 양식', approval: A3, cycle: '년',
       note: '원본 (1) SWOT 분석: STRENGTHS(강점) · WEAKNESSES(약점) · OPPORTUNITIES(기회) · THREATS(위협) 4분면, 작성일자·작성자'
     },
-    'MD-0401-002': { // B-20(2) (관리대장: 내외부 이슈)
+    'MP-0401-002': { // B-20(2) (관리대장: 내외부 이슈)
       url: G + '1nkhHetfRNTkf0_MzzSr1ohlLGKtVq8xr9HfdVtXU4v0', srcTitle: 'MP_경영관리_SWOT분석표 양식 — (2) 이해관계자 니즈 파악표', cycle: '년',
       note: '원본 컬럼: 구분 · 이해관계자 · 주요 요구 사항 · 관련문서/근거 · 관련부서 · 비고'
     },
-    'MD-0401-001': { // B-20(2) 이해관계자 니즈 분석
+    'MP-0401-001': { // B-20(2) 이해관계자 니즈 분석
       url: G + '1nkhHetfRNTkf0_MzzSr1ohlLGKtVq8xr9HfdVtXU4v0', srcTitle: 'MP_경영관리_SWOT분석표 양식 — (2) 이해관계자 니즈 파악표', cycle: '년',
       purpose: '이해관계자별 주요 요구 사항 및 관련문서·관련부서 파악 (조직상황 분석)',
       header: [h('writer', '작성자', 'user')],

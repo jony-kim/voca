@@ -8,7 +8,7 @@
      due: 기한 필드(대시보드 알림), calc: 저장 시 계산 */
   var GRADE = function (s) { return s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 70 ? 'C' : 'D'; };
   Q.REG_LIST = [
-    { key: 'issues', title: '내외부 이슈 파악표', form: 'MD-0401-002', clause: '4.1', titleKey: 'issue',
+    { key: 'issues', title: '내외부 이슈 파악표', form: 'MP-0401-002', clause: '4.1', titleKey: 'issue',
       fields: [{ k: 'kind', label: '구분', type: 'select', options: ['외부', '내부'], req: true }, { k: 'area', label: '분야', type: 'select', options: ['법규', '기술', '경쟁', '시장', '경제', '사회·문화', '가치', '문화', '지식', '성과', '기타'] },
         { k: 'issue', label: '이슈', full: true, req: true }, { k: 'impact', label: 'QMS 영향', type: 'textarea', rows: 2 }, { k: 'response', label: '대응 방향 (리스크 대장 연계)', type: 'textarea', rows: 2 },
         { k: 'owner', label: '담당', type: 'dept' }, { k: 'reviewed', label: '검토일', type: 'date' }],
@@ -250,7 +250,7 @@
     var REGMAP = {};
     Q.REG_LIST.forEach(function (rd) { REGMAP[rd.form] = rd.key; });
     REGMAP['MD-0701-003'] = 'equipment'; REGMAP['MD-0804-001'] = 'equipment'; REGMAP['MD-0812-002'] = 'instruments'; REGMAP['MD-1002-003'] = 'custIssues';
-    var CYCLE = { 'MD-0804-004': '매일', 'MD-0804-006': '매일', 'MI-0801-004': '수시', 'MD-0804-005': '매월', 'MI-1001-001': '매월', 'MD-0901-001': '수시', 'MD-0808-002': '매월', 'MD-0701-001': '년', 'MD-0903-002': '년', 'MD-0903-003': '년', 'MI-0601-001': '년', 'MD-0401-001': '년', 'MD-1001-001': '분기' };
+    var CYCLE = { 'MD-0804-004': '매일', 'MD-0804-006': '매일', 'MI-0801-004': '수시', 'MD-0804-005': '매월', 'MI-1001-001': '매월', 'MD-0901-001': '수시', 'MD-0808-002': '매월', 'MD-0701-001': '년', 'MD-0903-002': '년', 'MD-0903-003': '년', 'MI-0601-001': '년', 'MP-0401-001': '년', 'MD-1001-001': '분기' };
     S.forms = (S.formList || []).concat((S.extraForms || []).map(function (x) { x.extra = true; return x; })).map(function (f) {
       var o = Q.clone(f), d = det[f.code] || {};
       Object.keys(d).forEach(function (k) { o[k] = d[k]; });

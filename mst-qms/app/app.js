@@ -55,7 +55,7 @@
       if (!docs.some(function (d) { return d.process === p.code && d.level !== '프로세스'; })) out.push(['경고', '하위 절차서·지침서 없는 프로세스', p.code]);
       if (!(Q.S.kpis || []).some(function (k) { return k.proc === p.code; })) out.push(['경고', 'KPI 없는 프로세스 (4.4.1 c)', p.code + ' ' + p.name]);
     });
-    (Q.S.kpis || []).forEach(function (k) { if (Q.num(k.target) === null) out.push(['경고', 'KPI 목표값 미설정', k.name]); });
+    (Q.S.kpis || []).forEach(function (k) { if (Q.num(k.target) === null) out.push(['경고', 'KPI 목표값 미설정', k.name]); else if (k.provisional) out.push(['경고', 'KPI 가목표 (업체 확정 필요)', k.name + ' ' + k.target + (k.unit || '')]); });
     (window.SEED.clauses || []).forEach(function (c) { if (!docs.some(function (d) { return (d.clauses || []).some(function (x) { return x === c.no || x.indexOf(c.no + '.') === 0 || c.no.indexOf(x + '.') === 0; }); })) out.push(['경고', 'ISO 조항에 연결된 문서 없음', c.no + ' ' + c.title]); });
     return out;
   };

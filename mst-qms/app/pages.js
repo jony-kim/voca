@@ -73,7 +73,7 @@
     Q.$$('[data-badge]').forEach(function (el) { var n = map[el.getAttribute('data-badge')]; el.hidden = !n; el.textContent = n || ''; });
   };
   Q.prevMonth = function () { var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
-  Q.kpiTarget = function (k) { return Q.num(k.target) === null ? '<span class="chip warn">목표 미설정</span>' : (k.dir === 'down' ? '≤' : '≥') + E(k.target) + E(k.unit || ''); };
+  Q.kpiTarget = function (k) { return Q.num(k.target) === null ? '<span class="chip warn">목표 미설정</span>' : (k.dir === 'down' ? '≤' : '≥') + E(k.target) + E(k.unit || '') + (k.provisional ? ' <span class="chip warn" title="임시 목표 — 업체 확정 필요">가목표</span>' : ''); };
   Q.kpiOk = function (k, v) {
     v = Q.num(v); if (v === null) return true;
     var t = Q.num(k.target); if (t === null) return true;
@@ -359,7 +359,7 @@
     var h = '<div class="tiles">' + lv.map(function (l) { return '<div class="tile"><div class="k">' + l + '</div><div class="v">' + (Q.S.docs || []).filter(function (d) { return d.level === l; }).length + '</div></div>'; }).join('') +
       '<div class="tile"><div class="k">양식</div><div class="v">' + (window.SEED.forms || []).length + '</div></div>' +
       '<div class="tile" data-go="docs/_revlog"><div class="k">원본 대비 수정</div><div class="v">' + (window.SEED.revisionLog || []).length + '</div><div class="s">오타·타사 명칭 정정 → 클릭</div></div>' +
-      '<div class="tile ' + ((window.SEED.docIssues || []).length ? 'warn' : '') + '" data-go="docs/_issues"><div class="k">정합성 이슈</div><div class="v">' + (window.SEED.docIssues || []).filter(function (i) { return !(Q.S.settings.issueDone || {})[i.no]; }).length + '</div><div class="s">번호 중복·불일치 → 클릭</div></div></div>';
+      '<div class="tile ' + ((window.SEED.docIssues || []).length ? 'warn' : '') + '" data-go="docs/_issues"><div class="k">정합성 이슈</div><div class="v">' + (window.SEED.docIssues || []).filter(function (i) { return !i.resolved && !(Q.S.settings.issueDone || {})[i.no]; }).length + '</div><div class="s">미해결 (정정 완료 ' + (window.SEED.docIssues || []).filter(function (i) { return i.resolved; }).length + '건) → 클릭</div></div></div>';
     h += '<div class="card"><div class="filters"><input data-inp="docQ" placeholder="번호·문서명·부서" value="' + E(st.q || '') + '">' +
       '<select data-chg="docLv"><option value="">전체 수준</option>' + lv.map(function (l) { return '<option' + (st.level === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select>' +
       '<select data-chg="docTy"><option value="">전체 분류</option>' + ['MP', 'COP', 'SP'].map(function (l) { return '<option' + (st.type === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select>' +
@@ -476,7 +476,8 @@
     var done = Q.S.settings.issueDone || {};
     return '<div class="row no-print" style="margin-bottom:12px"><a href="#/docs">← 문서 체계</a></div><div class="card"><h2>원본 문서 간 정합성 이슈 <span class="sp"></span><span class="small muted">문서체계표 · 표준목록 · 매뉴얼 대조 결과</span></h2>' +
       '<p class="small muted">심사 전에 정리할 항목입니다. 조치를 마치면 체크하세요.</p>' +
-      Q.table([{ label: '완료', html: function (i) { return '<input type="checkbox" data-chg="issueDone" data-no="' + i.no + '"' + (done[i.no] ? ' checked' : '') + '>'; } }, { label: '#', k: 'no' }, { label: '이슈', k: 'text' }, { label: '권고 조치', k: 'fix' }], window.SEED.docIssues || []) + '</div>';
+      Q.table([{ label: '완료', html: function (i) { return i.resolved ? Q.chip('정정 완료', 'good') : '<input type="checkbox" data-chg="issueDone" data-no="' + i.no + '"' + (done[i.no] ? ' checked' : '') + '>'; } }, { label: '#', k: 'no' }, { label: '이슈', k: 'text' },
+        { label: '조치', html: function (i) { return i.resolved ? '<b>' + E(i.resolved) + '</b>' : E(i.fix) + ' <span class="small muted">(원본 수정 필요)</span>'; } }], window.SEED.docIssues || []) + '</div>';
   }
   Q.on('issueDone', function (el) { Q.S.settings.issueDone = Q.S.settings.issueDone || {}; Q.S.settings.issueDone[el.getAttribute('data-no')] = el.checked; Q.save(); });
 
@@ -523,13 +524,15 @@
     var months = []; for (var i = 1; i <= 12; i++) months.push(y + '-' + String(i).padStart(2, '0'));
     var h = '<div class="card no-print"><div class="row"><button class="btn sm" data-go="kpi/' + (y - 1) + '">◀ ' + (y - 1) + '</button><b style="font-size:16px">' + y + '년</b><button class="btn sm" data-go="kpi/' + (y + 1) + '">' + (y + 1) + ' ▶</button><span class="sp"></span>' +
       '<button class="btn" data-act="kpiCsv" data-y="' + y + '">MD-0901-004 실적현황 CSV</button><button class="btn pri" data-act="kpiNew">지표 추가</button></div></div>';
-    h += '<div class="card"><h2>성과지표 목표대비 실적현황 (MD-0901-004) <span class="sp"></span><span class="small muted">셀에 직접 입력 · 자동 저장</span></h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>프로세스</th><th>지표</th><th>목표</th>' +
+    var prov = (S.kpis || []).filter(function (k) { return k.provisional; }).length;
+    if (prov) h += '<div class="card" style="border-left:3px solid var(--warn)"><div class="row"><div style="flex:1"><b>가목표 ' + prov + '개</b><div class="small muted">원본 KPI 시트에 목표값이 비어 있어 업계 통상 수준으로 임시 목표를 넣었습니다. 노란 칸의 숫자를 고치면 업체 확정 목표로 바뀌고, 지금 값 그대로 쓰려면 "확정"을 누르세요. 변경 이력은 지표별로 남습니다.</div></div><button class="btn" data-act="kpiConfirmAll">가목표 전체 확정</button></div></div>';
+    h += '<div class="card"><h2>성과지표 목표대비 실적현황 (MD-0901-004) <span class="sp"></span><span class="small muted">실적·목표 셀에 직접 입력 · 자동 저장</span></h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>프로세스</th><th>지표</th><th>목표</th>' +
       months.map(function (m) { return '<th>' + (+m.slice(5)) + '월</th>'; }).join('') + '<th>누계/평균</th><th>달성률</th><th></th></tr></thead><tbody>' +
       (S.kpis || []).map(function (k) {
         var a = S.kpiActuals[k.id] || {}, vals = months.map(function (m) { return Q.num(a[m]); }).filter(function (v) { return v !== null; });
         var agg = vals.length ? (k.agg === 'sum' ? vals.reduce(function (s, v) { return s + v; }, 0) : vals.reduce(function (s, v) { return s + v; }, 0) / vals.length) : null;
         var okN = months.filter(function (m) { return Q.num(a[m]) !== null && Q.kpiOk(k, a[m]); }).length;
-        return '<tr><td>' + E((Q.proc(k.proc) || {}).name || k.proc || '') + '</td><td><b>' + E(k.name) + '</b><div class="small muted">' + E(k.formula || '') + '</div></td><td class="n">' + Q.kpiTarget(k) + '</td>' +
+        return '<tr><td style="min-width:90px">' + E((Q.proc(k.proc) || {}).name || k.proc || '') + '</td><td style="min-width:220px"><b>' + E(k.name) + '</b><div class="small muted">' + E(k.formula || '') + '</div></td><td class="n" style="white-space:nowrap">' + (k.dir === 'down' ? '≤' : '≥') + '<input class="mono" style="width:64px;' + (k.provisional ? 'border-color:var(--warn);background:var(--warn-soft)' : '') + '" title="' + E(k.targetText || '') + (k.provisional ? ' (가목표 — 수정하면 확정)' : '') + '" data-chg="kpiTarget" data-k="' + E(k.id) + '" value="' + E(k.target === null || k.target === undefined ? '' : k.target) + '">' + E(k.unit || '') + (k.provisional ? '<div><span class="chip warn">가목표</span> <button class="btn sm ghost" data-act="kpiConfirm" data-k="' + E(k.id) + '" title="현재 값으로 확정">확정</button></div>' : '') + '</td>' +
           months.map(function (m) { var v = a[m]; var bad = Q.num(v) !== null && !Q.kpiOk(k, v); return '<td style="padding:3px"><input class="mono" style="width:58px;' + (bad ? 'color:var(--crit);font-weight:700' : '') + '" data-chg="kpiSet" data-k="' + E(k.id) + '" data-m="' + m + '" value="' + E(v === undefined || v === null ? '' : v) + '"></td>'; }).join('') +
           '<td class="n">' + Q.fmt(agg) + '</td><td class="n">' + (vals.length ? Math.round(100 * okN / vals.length) + '%' : '-') + '</td><td><button class="btn sm ghost" data-act="kpiEdit" data-k="' + E(k.id) + '">⋯</button></td></tr>';
       }).join('') + '</tbody></table></div><p class="small muted" style="margin-top:8px">달성률 = 목표 달성 월 수 ÷ 입력 월 수. 붉은 값은 목표 미달 — 미달 시 부적합·시정조치(MD-1002) 또는 개선활동(MD-1001)으로 연결하세요.</p></div>';
@@ -540,6 +543,21 @@
           { labels: months.map(function (m) { return (+m.slice(5)) + '월'; }), h: 180, zero: true, lines: [{ v: Q.num(k.target), label: '목표', color: 'var(--good)' }] }) + '</div>';
     }).join('') + '</div>';
     return h;
+  });
+  function kpiById(id) { return Q.S.kpis.filter(function (x) { return x.id === id; })[0]; }
+  function confirmTarget(k, from) {
+    k.targetLog = k.targetLog || [];
+    k.targetLog.push({ date: Q.today(), by: Q.me(), from: from, to: k.target, note: k.provisional ? '가목표 확정' : '목표 변경' });
+    k.provisional = false; k.targetText = '';
+  }
+  Q.on('kpiTarget', function (el) {
+    var k = kpiById(el.getAttribute('data-k')), v = Q.num(el.value), from = k.target;
+    if (v === null && el.value.trim() !== '') { Q.toast('숫자를 입력하세요'); el.value = from; return; }
+    k.target = v; confirmTarget(k, from); Q.save(); Q.rerender(); Q.toast(k.name + ' 목표 ' + (v === null ? '삭제' : v + (k.unit || '')) + ' — 확정');
+  });
+  Q.on('kpiConfirm', function (el) { var k = kpiById(el.getAttribute('data-k')); confirmTarget(k, k.target); Q.save(); Q.rerender(); });
+  Q.on('kpiConfirmAll', function () {
+    Q.confirm('가목표를 모두 현재 값으로 확정할까요?', function () { Q.S.kpis.forEach(function (k) { if (k.provisional) confirmTarget(k, k.target); }); Q.save(); Q.rerender(); });
   });
   Q.on('kpiSet', function (el) {
     var k = el.getAttribute('data-k'), m = el.getAttribute('data-m');
@@ -559,8 +577,8 @@
   });
   Q.on('kpiEdit', function (el) {
     var k = Q.S.kpis.filter(function (x) { return x.id === el.getAttribute('data-k'); })[0], f = kpiFields();
-    Q.modal('KPI 수정', Q.formHtml(f, k), [{ label: '삭제', cls: 'danger', fn: function () { Q.confirm('이 지표와 실적을 삭제할까요?', function () { Q.S.kpis = Q.S.kpis.filter(function (x) { return x !== k; }); delete Q.S.kpiActuals[k.id]; Q.save(); Q.rerender(); }); return false; } },
-      { label: '취소' }, { label: '저장', cls: 'pri', fn: function (m) { var o = Q.readForm(m, f); if (!o) return false; Object.keys(o).forEach(function (x) { k[x] = o[x]; }); Q.save(); Q.rerender(); } }]);
+    Q.modal('KPI 수정', Q.formHtml(f, k) + (k.targetLog && k.targetLog.length ? '<h3>목표 변경 이력</h3>' + Q.table([{ label: '일자', k: 'date' }, { label: '변경', k: function (x) { return (x.from === null || x.from === undefined ? '-' : x.from) + ' → ' + x.to; } }, { label: '구분', k: 'note' }, { label: '처리자', k: 'by' }], k.targetLog) : ''), [{ label: '삭제', cls: 'danger', fn: function () { Q.confirm('이 지표와 실적을 삭제할까요?', function () { Q.S.kpis = Q.S.kpis.filter(function (x) { return x !== k; }); delete Q.S.kpiActuals[k.id]; Q.save(); Q.rerender(); }); return false; } },
+      { label: '취소' }, { label: '저장', cls: 'pri', fn: function (m) { var o = Q.readForm(m, f); if (!o) return false; var from = k.target; Object.keys(o).forEach(function (x) { k[x] = o[x]; }); if (from !== k.target || k.provisional) confirmTarget(k, from); Q.save(); Q.rerender(); } }]);
   });
   Q.on('kpiCsv', function (el) {
     var y = el.getAttribute('data-y'), ms = []; for (var i = 1; i <= 12; i++) ms.push(y + '-' + String(i).padStart(2, '0'));

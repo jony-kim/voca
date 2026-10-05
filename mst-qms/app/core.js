@@ -88,6 +88,14 @@
         if (!st.registers[r].length) st.registers[r] = Q.clone(S.registerSeed[r]);
       });
       if (!st.users.length && S.users) st.users = Q.clone(S.users);
+      /* v2: KPI 가목표 · 문서 번호 정정 반영 (업체가 고친 값은 유지) */
+      var sk = Q.byKey(S.kpis, 'id');
+      (st.kpis || []).forEach(function (k) {
+        var x = sk[k.id]; if (!x) return;
+        if ((k.target === null || k.target === undefined || k.target === '') && x.target !== null && x.target !== undefined) { k.target = x.target; k.targetText = x.targetText; k.provisional = !!x.provisional; }
+      });
+      var sd = Q.byKey(S.documents, 'code');
+      (st.docs || []).forEach(function (d) { var x = sd[d.code]; if (x && x.notes !== undefined && !d.userEdited) d.notes = x.notes; });
       st.seedVersion = S.version;
     }
     return st;

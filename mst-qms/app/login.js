@@ -20,7 +20,7 @@
 
   /* 열람 권한에서 허용되는 동작 (보기·검색·인쇄·내보내기) */
   var READ_OK = /^(menu|doSearch|docQ|docLv|docTy|docCsv|ncrQ|ncrSt|ncrSrc|ncrCsv|regQ|regCsv|formQ|formProc|kpiCsv|lnkQ|lnkSec|lnkOnly|lnkCsv|revQ|revCsv|trCsv|theme|backup|rerun|logout|spcRun|spcLoad|msaRun|msaGrid|msaSample|setUser)$/;
-  var ADMIN_ONLY = /^(resetAll|chooseData|restore|userEdit|issueDone|docApprove|kpiEdit|kpiNew|docEdit|setPerm|resetPin)$/;
+  var ADMIN_ONLY = /^(resetAll|chooseData|restore|userEdit|issueDone|docApprove|kpiNew|setPerm|resetPin)$/;
   function guard(e) {
     var t = e.target.closest('[data-act],[data-chg],[data-inp]'); if (!t || !Q.S) return;
     if (t.closest('#login')) return;
