@@ -2690,7 +2690,7 @@ window.SEED.courses = [
  {
   "id": "C01",
   "title": "ISO 9001:2015 요구사항 이해",
-  "target": "[권장] 전 직원 / 내부심사원",
+  "target": "전 직원 / 내부심사원",
   "hours": "",
   "objectives": [
    "품질경영시스템 1장~10장에 대한 요구사항 해설 및 이해"
@@ -2866,7 +2866,7 @@ window.SEED.courses = [
  {
   "id": "C03",
   "title": "측정시스템 분석 (MSA) 이해",
-  "target": "[권장] 품질·검사 담당자",
+  "target": "품질·검사 담당자",
   "hours": "",
   "objectives": [
    "측정 시스템 분석을 통한 측정 방법 및 운영 사례 실습"
@@ -2952,7 +2952,7 @@ window.SEED.courses = [
  {
   "id": "C04",
   "title": "통계적 공정관리 (SPC)",
-  "target": "[권장] 품질·생산 담당자",
+  "target": "품질·생산 담당자",
   "hours": "",
   "objectives": [
    "통계적 공정 관리 (SPC)에 대한 이해 및 사례 실습"
