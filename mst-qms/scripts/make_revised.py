@@ -74,7 +74,7 @@ def sec00():
                 widths=[6, 10, 16, 34, 50, 50])
     ws2 = wb.create_sheet('정합성 이슈 조치')
     sheet_table(ws2, ['No', '원본 이슈', '권고 조치', '정정 결과'],
-                [[i['no'], i['text'], i['fix'], i.get('resolved', '원본(Drive) 수정 필요')] for i in S.get('docIssues', [])], widths=[6, 60, 45, 55])
+                [[i['no'], i['text'], i['fix'], i.get('resolved', '정정본 반영')] for i in S.get('docIssues', [])], widths=[6, 60, 45, 55])
     wb.save(os.path.join(OUT, '00_수정내역_및_정합성.xlsx'))
 
 
@@ -263,12 +263,12 @@ def sec04():
     months = [f'{m}월' for m in range(1, 13)]
     sheet_table(ws, ['구분', '프로세스', '지표', '산출식', '단위', '방향', '목표', '목표 상태', '주기', '담당'] + months,
                 [['품질목표' if k.get('objective') else '프로세스 KPI', k.get('proc', ''), k['name'], k.get('formula', ''), k.get('unit', ''), '↓ 작을수록' if k.get('dir') == 'down' else '↑ 클수록',
-                  k.get('target'), '가목표(업체 확정 필요)' if k.get('provisional') else '확정', k.get('cycle', ''), k.get('owner', '')] + [''] * 12 for k in S['kpis']],
+                  k.get('target'), '초기 목표 (업체 확정 전)' if k.get('provisional') else '확정', k.get('cycle', ''), k.get('owner', '')] + [''] * 12 for k in S['kpis']],
                 widths=[11, 10, 26, 40, 6, 10, 8, 18, 6, 9] + [7] * 12)
     for row in ws.iter_rows(min_row=2):
         if row[7].value and '가목표' in str(row[7].value):
             row[6].fill = PatternFill('solid', fgColor='FBF0DA')
-    wb.save(os.path.join(OUT, '04_KPI_성과지표(가목표).xlsx'))
+    wb.save(os.path.join(OUT, 'KPI_성과지표_초기목표.xlsx'))
 
 
 # ───────── 05 내부심사 체크시트 ─────────
@@ -308,7 +308,7 @@ def sec06():
         ws.cell(1, 1, f"{ce.get('customer', '')} {ce.get('title', '')} ↔ ISO 9001 ↔ MST 문서·기록 연동표").font = TITLE
         sheet_table(ws, ['SSQ', '분류', '평가 항목', '배점', '과락', '평가 기준', '고객 확인 증빙', 'ISO 9001', 'MST 표준문서(기준 수립)', '기록 양식(이행 실적)', '관리대장·기록', '내부심사 CK-ISO', '점검 포인트', '공백 보완'],
                     rows, start=3, widths=[5, 12, 40, 6, 6, 40, 22, 10, 26, 30, 14, 9, 36, 36])
-        wb.save(os.path.join(OUT, '06_세메스SSQ_ISO_연동표.xlsx'))
+        wb.save(os.path.join(OUT, '세메스SSQ_ISO_연동표.xlsx'))
 
 
 
@@ -319,7 +319,7 @@ if ONLY_NEW:
     S['documents'] = [d for d in S['documents'] if d.get('proposed')] + [d for d in S['documents'] if not d.get('proposed')]
     _new_docs = [d for d in S['documents'] if d.get('proposed')]
     _new_forms = [f for f in S['forms'] if f.get('proposed') or f['code'] == 'MI-0809-001']
-sec00(); sec04(); sec06()
+sec04(); sec06()
 if ALL:
     sec01(); sec02(); sec03(); sec05()
 else:

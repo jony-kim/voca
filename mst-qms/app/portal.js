@@ -81,7 +81,9 @@
   function sqChips(code) { return Q.ssqOf(code).map(function (n) { return '<a class="sqchip" href="#/link/' + E(n) + '">SSQ ' + E(n) + '</a>'; }).join(''); }
   /* 정정본 원본 파일 (data/originals.js) */
   Q.origFile = function (code) { return (window.ORIGINALS || {})[code] || null; };
-  function dlBtn(code, label) { var p = Q.origFile(code); return p ? '<a class="btn pri" href="' + E(p) + '" download>' + E(label || '다운로드') + '</a>' : ''; }
+  function dlAttr(p) { return /^https?:/.test(p) ? ' target="_blank" rel="noopener"' : ' download'; }
+  Q.dlAttr = dlAttr;
+  function dlBtn(code, label) { var p = Q.origFile(code); return p ? '<a class="btn pri" href="' + E(p) + '"' + dlAttr(p) + '>' + E(label || '다운로드') + '</a>' : ''; }
   function docsOf(proc) { return (Q.S.docs || []).filter(function (d) { return d.process === proc && d.level !== '프로세스' && d.level !== '매뉴얼'; }); }
   function formsOf(code) { return (S().forms || []).filter(function (f) { return f.doc === code; }); }
   function isNew(x) { return x && (x.proposed || x.status === '제정 예정'); }
@@ -205,7 +207,7 @@
     var h = '<div class="grid" style="grid-template-columns:1.25fr 1fr"><div class="card"><dl class="kv"><dt>유형</dt><dd>' + E(d.level) + '</dd><dt>ISO 조항</dt><dd>' + (d.clauses || []).map(function (c) { var cl = Q.clause(c); return '<a href="#/clauses/' + E(c) + '">' + E(c + (cl ? ' ' + cl.title : '')) + '</a>'; }).join(', ') + '</dd>' +
       '<dt>주관부서</dt><dd><a href="#/org/' + E(d.owner || '') + '">' + E(d.owner || '-') + '</a></dd>' + (p && d.code !== p.code ? '<dt>상위 프로세스</dt><dd>' + docLink(p.code) + '</dd>' : '') +
       '<dt>목적</dt><dd>' + E(d.purpose || '-') + '</dd><dt>적용범위</dt><dd>' + E(d.scope || '-') + '</dd>' + (d.retention ? '<dt>기록 보존</dt><dd>' + E(d.retention) + '</dd>' : '') + '</dl>' +
-      '<div class="row" style="margin-top:14px">' + dlBtn(d.code, '원본 다운로드') + (Q.origFile(d.code) ? '' : '<span class="small muted">신규 제정 문서 — 신규 제정 권고 폴더 참조</span>') + '<button class="btn" data-act="docEdit" data-code="' + E(d.code) + '">정보 수정</button>' +
+      '<div class="row" style="margin-top:14px">' + dlBtn(d.code, '원본 다운로드') + '' + '<button class="btn" data-act="docEdit" data-code="' + E(d.code) + '">정보 수정</button>' +
       (d.status === '개정중' || d.status === '제정 예정' ? '<button class="btn" data-act="docApprove" data-code="' + E(d.code) + '">' + (d.status === '제정 예정' ? '제정 승인' : '개정 승인') + '</button>' : '<button class="btn" data-act="docRevise" data-code="' + E(d.code) + '">개정 요청</button>') + '</div></div>' +
       '<div class="card"><h2>성과지표 (KPI)</h2>' + (kpis.length ? Q.table([{ label: '지표', html: function (k) { return k.txt ? E(k.name) : '<a href="#/kpi">' + E(k.name) + '</a>'; } }, { label: '목표', html: function (k) { return k.txt ? '' : Q.kpiTarget(k); } }, { label: '주기', k: function (k) { return k.cycle || ''; } }], kpis) : '<div class="empty small">연결된 KPI 없음</div>') +
       (sqChips(d.code) ? '<h3>연계 세메스 SSQ</h3><div>' + sqChips(d.code) + '</div>' : '') + '</div></div>';
@@ -218,7 +220,7 @@
       { label: '양식번호', html: function (f) { return '<a class="code" href="#/forms/' + E(f.code) + '">' + E(f.code) + '</a>'; } }, { label: '양식명', k: 'title' },
       { label: '구분', html: function (f) { return isNew(f) ? '<span class="badge-new">신규</span>' : '<span class="small muted">보유</span>'; } },
       { label: '연계 SSQ', html: function (f) { return sqChips(f.code); } }, { label: '작성 주기', k: function (f) { return f.cycle || ''; } },
-      { label: '', html: function (f) { return (Q.origFile(f.code) ? '<a href="' + E(Q.origFile(f.code)) + '" download>다운로드</a> · ' : '') + '<a href="#/forms/' + E(f.code) + '">작성</a>'; } }], fs, { empty: '소속 양식 없음' }) + '</div>';
+      { label: '', html: function (f) { return (Q.origFile(f.code) ? '<a href="' + E(Q.origFile(f.code)) + '"' + dlAttr(Q.origFile(f.code)) + '>다운로드</a> · ' : '') + '<a href="#/forms/' + E(f.code) + '">작성</a>'; } }], fs, { empty: '소속 양식 없음' }) + '</div>';
     var hist = (Q.S.docHistory[d.code] || []);
     h += '<div class="card"><h2>개정 이력</h2>' + Q.table([{ label: '일자', k: 'date' }, { label: '구분', k: 'kind' }, { label: 'Rev', k: 'rev' }, { label: '내용', k: 'text' }, { label: '처리자', k: 'by' }],
       [{ date: d.date || '', kind: '제정', rev: '0', text: isNew(d) ? '신규 제정 (세메스 SSQ 대응)' : 'ISO 9001:2015 최초 작성', by: '' }].concat(hist)) + '</div>';
@@ -381,7 +383,7 @@
         { label: '근거 문서', html: function (f) { return docLink(f.doc); } }, { label: '작성 부서', k: function (f) { return (Q.doc(f.doc) || {}).owner || ''; } },
         { label: '연계 SSQ', html: function (f) { return sqChips(f.code); } },
         { label: '이행 상태', html: function (f) { var l = lastRec(f); if (!CYC_DAYS[f.cycle]) return l ? '<span class="small">' + E(l) + '</span>' : ''; if (!l) return Q.chip('미작성', 'crit'); var late = -Q.daysUntil(l) - CYC_DAYS[f.cycle]; return late > 0 ? Q.chip(late + '일 지연', 'warn') : Q.chip('정상 ' + l.slice(5), 'good'); } },
-        { label: '', html: function (f) { return (Q.origFile(f.code) ? '<a href="' + E(Q.origFile(f.code)) + '" download>양식 받기</a> · ' : '') + '<a href="#/forms/' + E(f.code) + '">작성</a>'; } }], fs) + '</div>';
+        { label: '', html: function (f) { return (Q.origFile(f.code) ? '<a href="' + E(Q.origFile(f.code)) + '"' + dlAttr(Q.origFile(f.code)) + '>양식 받기</a> · ' : '') + '<a href="#/forms/' + E(f.code) + '">작성</a>'; } }], fs) + '</div>';
     });
     return h;
   });

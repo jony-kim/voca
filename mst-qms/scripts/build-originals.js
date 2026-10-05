@@ -18,6 +18,9 @@ for (const f of forms) {
   if (!map[f.code] && t) { const hit = files.find(p => base(p) === t); if (hit) map[f.code] = rel(hit); }
 }
 if (!map['QM-01']) { const m = files.find(p => base(p).startsWith('QM-01')); if (m) map['QM-01'] = rel(m); }
+/* 로컬 정정본이 없는 것은 Drive 원본으로 연결 */
+for (const f of forms) { const u = ((det[f.code] || {}).url || f.url || ''); if (!map[f.code] && /^https:\/\/docs\.google\.com\//.test(u)) map[f.code] = u; }
+for (const d of S.documents) { const u = ((S.docDetails || {})[d.code] || {}).url || d.url || ''; if (!map[d.code] && /\/d\//.test(u)) map[d.code] = u; }
 const missing = forms.map(f => f.code).filter(c => !map[c]).concat(S.documents.map(d => d.code).filter(c => !map[c]));
 fs.writeFileSync(path.join(root, 'app', 'data', 'originals.js'), '/* 자동 생성: scripts/build-originals.js */\nwindow.ORIGINALS = ' + JSON.stringify(map, null, 1) + ';\n');
 console.log('mapped', Object.keys(map).length, 'of', forms.length + S.documents.length, '| missing:', missing.join(' '));

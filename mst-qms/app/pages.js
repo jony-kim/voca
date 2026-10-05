@@ -467,8 +467,8 @@
     return '<div class="row no-print" style="margin-bottom:12px"><a href="#/docs">← 문서 체계</a></div>' +
       '<div class="tiles">' + Object.keys(kinds).map(function (k) { return '<div class="tile"><div class="k">' + E(k) + '</div><div class="v">' + kinds[k] + '</div></div>'; }).join('') + '</div>' +
       '<div class="card"><h2>원본 대비 수정 내역 <span class="sp"></span><input data-chg="revQ" placeholder="검색" value="' + E(st) + '" style="padding:5px 9px;border:1px solid var(--line-2);border-radius:6px"><button class="btn sm" data-act="revCsv">CSV</button></h2>' +
-      '<p class="small muted">Drive 원본을 옮기면서 고친 오타, 다른 회사 명칭·문서번호, 적용 표준 표기입니다. 원본 파일(구글 시트)에도 같은 수정을 반영하세요.</p>' +
-      Q.table([{ label: '구분', html: function (r) { return Q.chip(r.kind, r.kind === '오타' ? '' : 'warn'); } }, { label: '위치', k: function (r) { return r.file.replace('seed-', '').replace('.js', '') + ' · ' + r.where; } }, { label: '수정 전', k: 'before' }, { label: '수정 후', k: 'after' }], list, { empty: '수정 내역 없음' }) + '</div>';
+      '<p class="small muted">원본 문서(매뉴얼·절차서·지침서·양식)에서 정정한 오타·맞춤법, 타사 명칭·번호, 문서번호 체계, 업종 표현입니다. 정정본은 각 문서 화면의 「원본 다운로드」로 받을 수 있습니다.</p>' +
+      Q.table([{ label: '폴더', k: 'kind' }, { label: '문서·위치', k: 'where' }, { label: '수정 전', k: 'before' }, { label: '수정 후', k: 'after' }], list, { empty: '수정 내역 없음' }) + '</div>';
   }
   Q.on('revQ', function (el) { Q.S.settings.revQ = el.value; Q.rerender(); });
   Q.on('revCsv', function () { Q.csv('원본대비_수정내역_' + Q.today() + '.csv', ['구분', '파일', '위치', '수정 전', '수정 후'], (window.SEED.revisionLog || []).map(function (r) { return [r.kind, r.file, r.where, r.before, r.after]; })); });
