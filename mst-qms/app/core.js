@@ -320,7 +320,7 @@
   /* ───────── SVG 차트 (오프라인 · 외부 라이브러리 없음) ───────── */
   Q.lineChart = function (series, opt) {
     opt = opt || {};
-    var W = opt.w || 640, H = opt.h || 220, L = 44, R = 14, T = 14, B = 28;
+    var W = opt.w || 960, H = opt.h || 260, L = 54, R = 14, T = 14, B = 28;
     var labels = opt.labels || [];
     var vals = [];
     series.forEach(function (s) { s.data.forEach(function (v) { if (v !== null && v !== undefined) vals.push(v); }); });
@@ -365,7 +365,7 @@
     if (!items.length) return '<div class="empty small">데이터 없음</div>';
     var W = opt.w || 640, rowH = 26, L = opt.left || 150, R = 50, H = items.length * rowH + 10;
     var mx = Math.max.apply(null, items.map(function (i) { return i.v; }).concat([opt.max || 0, 1]));
-    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '">' + items.map(function (it, i) {
+    return '<svg class="chart" style="max-width:' + (opt.maxW || 760) + 'px" viewBox="0 0 ' + W + ' ' + H + '">' + items.map(function (it, i) {
       var w = (W - L - R) * it.v / mx, yy = 5 + i * rowH;
       return '<text class="lbl" x="' + (L - 8) + '" y="' + (yy + 15) + '" text-anchor="end">' + Q.esc(it.label) + '</text>' +
         '<rect x="' + L + '" y="' + (yy + 3) + '" width="' + Math.max(w, 1) + '" height="16" rx="3" fill="' + (it.color || 'var(--accent)') + '"/>' +

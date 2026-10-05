@@ -1,0 +1,35 @@
+# MST QMS 데스크톱 설치파일 빌드 (Windows .exe / macOS .dmg)
+# GitHub → Actions → "MST QMS 설치파일 빌드" → Run workflow 로 수동 실행
+name: MST QMS 설치파일 빌드
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: mst-qms
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run check
+      - name: Windows 빌드
+        if: runner.os == 'Windows'
+        run: npx electron-builder --win nsis portable --publish never
+      - name: macOS 빌드 (서명 없음)
+        if: runner.os == 'macOS'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --mac dmg --universal --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MST-QMS-${{ runner.os }}
+          path: |
+            mst-qms/dist/*.exe
+            mst-qms/dist/*.dmg

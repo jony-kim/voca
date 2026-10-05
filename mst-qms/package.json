@@ -1,0 +1,28 @@
+{
+  "name": "mst-qms",
+  "productName": "MST QMS",
+  "version": "1.0.0",
+  "description": "주식회사 엠에스티 ISO 9001 품질경영시스템 (Windows · macOS 데스크톱)",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:mac": "electron-builder --mac dmg",
+    "check": "node scripts/check.js"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "kr.co.mst.qms",
+    "productName": "MST QMS",
+    "files": ["electron/**", "app/**", "package.json"],
+    "directories": { "output": "dist" },
+    "win": { "target": ["nsis", "portable"] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "shortcutName": "MST QMS" },
+    "mac": { "target": ["dmg"], "category": "public.app-category.business" },
+    "artifactName": "MST-QMS-${version}-${os}-${arch}.${ext}"
+  }
+}

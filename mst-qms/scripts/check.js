@@ -1,0 +1,25 @@
+/* 데이터·코드 점검: 모든 스크립트 문법, 기준 데이터 로드, 참조 무결성 */
+const fs = require('fs'), path = require('path'), vm = require('vm');
+const dir = path.join(__dirname, '..', 'app');
+let fail = 0;
+const ok = (c, m) => { if (!c) { fail++; console.error('✗ ' + m); } else console.log('✓ ' + m); };
+const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]);
+scripts.forEach(s => { try { new vm.Script(fs.readFileSync(path.join(dir, s), 'utf8'), { filename: s }); ok(true, '문법 ' + s); } catch (e) { ok(false, '문법 ' + s + ': ' + e.message); } });
+const ctx = { window: {} }; vm.createContext(ctx);
+scripts.filter(s => s.startsWith('data/')).forEach(s => vm.runInContext(fs.readFileSync(path.join(dir, s), 'utf8'), ctx));
+const S = ctx.window.SEED;
+const docs = new Set(S.documents.map(d => d.code));
+ok(docs.size === S.documents.length, '문서번호 중복 없음 (' + docs.size + ')');
+const forms = S.formList.concat(S.extraForms || []);
+ok(new Set(forms.map(f => f.code)).size === forms.length, '양식번호 중복 없음 (' + forms.length + ')');
+ok(forms.every(f => docs.has(f.doc)), '모든 양식의 상위 문서 존재');
+ok(Object.keys(S.formDetails || {}).every(k => forms.some(f => f.code === k)), '양식 상세 키가 양식 목록과 일치');
+ok(Object.keys(S.docDetails || {}).every(k => docs.has(k)), '절차서 상세 키가 문서 목록과 일치');
+const procs = new Set(S.processes.map(p => p.code));
+ok(S.documents.every(d => procs.has(d.process)), '모든 문서의 프로세스 존재');
+ok((S.kpis || []).every(k => !k.proc || procs.has(k.proc)), 'KPI 프로세스 참조 유효');
+ok(S.checklists && S.checklists.length > 0, '내부심사 체크시트 ' + (S.checklists || []).length + '종');
+ok(S.custEval && S.custEval.sections.length > 0, '고객사 평가 시트 ' + (S.custEval ? S.custEval.sections.reduce((t, s) => t + s.items.length, 0) : 0) + '항목');
+(S.courses || []).forEach(c => (c.quiz || []).forEach((q, i) => ok(q.answer >= 0 && q.answer < q.options.length, c.id + ' 퀴즈 ' + (i + 1) + ' 정답 범위')));
+if (fail) { console.error('\n실패 ' + fail + '건'); process.exit(1); } else console.log('\n모든 점검 통과');
