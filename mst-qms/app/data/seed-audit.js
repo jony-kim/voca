@@ -3396,7 +3396,7 @@ window.SEED.revisionLog = [
   "file": "seed-forms.js",
   "where": "MI-0806-002",
   "before": "대책본부 — 대표이사 이영민",
-  "after": "대책본부 — 대표이사 김맹권",
+  "after": "대책본부 — 대표이사 김명권",
   "kind": "타사명칭"
  },
  {

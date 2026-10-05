@@ -17,7 +17,7 @@ window.SEED = window.SEED || {};
   /* ───────── 회사 ───────── */
   S.company = {
     name: '주식회사 엠에스티 (MST)',
-    ceo: '김맹권',
+    ceo: '김명권',
     founded: '2015-07-03',
     address: '충청남도 천안시 서북구 백석공단1로 10',
     products: '반도체 장비 부품 (Chuck)',
@@ -55,7 +55,7 @@ window.SEED = window.SEED || {};
     ],
     appointees: [
       { role: '품질경영 총괄 (경영대리인)', who: '최용화 (품질총괄)' },
-      { role: '최고경영자 (승인권자)', who: '김맹권 (대표이사)' },
+      { role: '최고경영자 (승인권자)', who: '김명권 (대표이사)' },
       { role: '선적·생산 중단 권한 (5.3.2)', who: '' },
       { role: '시정·예방조치 책임자', who: '' },
       { role: '교육훈련 책임자', who: '' },
@@ -74,12 +74,12 @@ window.SEED = window.SEED || {};
       { who: '보험사', detail: '보험사', req: '무사고(화재 예방관리 등)', weight: 1 }
     ],
     manualRevs: [
-      { rev: '01', date: '2025-05-28', text: '품질경영시스템 신규 제정', by: '품질총괄 최용화 (동의: 강동휘·장민석·김용호)', appr: '대표이사 김맹권' }
+      { rev: '01', date: '2025-05-28', text: '품질경영시스템 신규 제정', by: '품질총괄 최용화 (동의: 강동휘·장민석·김용호)', appr: '대표이사 김명권' }
     ]
   };
 
   S.users = [
-    { name: '김맹권', dept: '경영진', role: '대표이사' },
+    { name: '김명권', dept: '경영진', role: '대표이사' },
     { name: '최용화', dept: '품질팀', role: '품질총괄' },
     { name: '강동휘', dept: '구매팀', role: '구매/영업 대리' },
     { name: '장민석', dept: '제조팀', role: '제조 주임' },
