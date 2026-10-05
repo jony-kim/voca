@@ -69,13 +69,16 @@
       h += '<div class="tiles"><div class="tile"><div class="k">점수</div><div class="v" id="audScore">' + sc.got + ' / ' + sc.max + '</div><div class="s">' + sc.pct + '% (판정 문항 기준)</div></div>' +
         ['L', 'M', 'H', 'NA'].map(function (k) { return '<div class="tile"><div class="k">' + ({ L: '양호 L', M: '보완 M', H: '미흡 H', NA: '해당없음' })[k] + '</div><div class="v">' + (sc.cnt[k] || 0) + '</div></div>'; }).join('') +
         '<div class="tile"><div class="k">미판정</div><div class="v">' + (sc.cnt[''] || 0) + '</div></div></div>';
+      if (window.SEED.ssqLink && Object.keys(window.SEED.ssqLink).some(function (k) { return ((window.SEED.ssqLink[k].ck || {})[a.checklist] || []).length; }))
+        h += '<div class="card" style="border-left:3px solid var(--mp)"><div class="row"><div style="flex:1"><b>세메스 SSQ 연동</b><div class="small muted">이 체크시트 문항은 SSQ 항목과 1:1로 연결되어 있습니다(보라색 SSQ 표시). 판정을 SSQ 자체점검으로 넘기면 L=만점, M=절반, H=0점으로 채점됩니다.</div></div><button class="btn" data-act="audToSsq" data-id="' + a.id + '">SSQ 자체점검에 반영</button></div></div>';
       h += '<p class="small muted">판정: L 양호(가중치×10) · M 보완(×5) · H 미흡(×0) · NA 해당없음. M/H 판정 문항은 "지적 등록"으로 시정조치요구서를 만드세요. 메모는 5W1H(언제·어디서·무엇을·누구·증거)로 기록.</p>';
       ck.sections.forEach(function (s) {
         h += '<div class="card"><h2>' + E(s.name) + '</h2>' + s.items.map(function (it) {
           var r = (a.results || {})[it.no] || {};
           return '<div style="border-bottom:1px solid var(--line);padding:10px 0"><div class="row" style="align-items:flex-start"><b class="mono" style="min-width:32px">' + E(it.no) + '</b><div style="flex:1"><div>' + E(it.q) + '</div>' +
             (it.criteria ? '<div class="small muted pre">' + E(it.criteria) + '</div>' : '') +
-            '<div class="small muted">' + (it.sub ? E(it.sub) + ' · ' : '') + (it.clause ? 'ISO ' + E(it.clause) + ' · ' : '') + '가중치 ' + E(it.weight || 1) + (it.evidence ? ' · 증빙: ' + E(it.evidence) : '') + '</div></div>' +
+            '<div class="small muted">' + (it.sub ? E(it.sub) + ' · ' : '') + (it.clause ? 'ISO <a href="#/clauses/' + E(it.clause) + '">' + E(it.clause) + '</a> · ' : '') + '가중치 ' + E(it.weight || 1) + (it.evidence ? ' · 증빙: ' + E(it.evidence) : '') +
+            (Q.ssqForCk ? Q.ssqForCk(a.checklist, it.no).map(function (n) { return ' <a class="chip mp" href="#/link/' + E(n) + '">SSQ ' + E(n) + '</a>'; }).join('') : '') + '</div></div>' +
             '<div class="row" style="gap:3px">' + ['L', 'M', 'H', 'NA'].map(function (j) { return '<button class="btn sm' + (r.j === j ? ' pri' : '') + '" data-act="audJ" data-id="' + a.id + '" data-no="' + E(it.no) + '" data-j="' + j + '">' + j + '</button>'; }).join('') +
             ((r.j === 'M' || r.j === 'H') ? '<button class="btn sm" data-act="findNew" data-id="' + a.id + '" data-no="' + E(it.no) + '">지적 등록</button>' : '') + '</div></div>' +
             '<input style="width:100%;margin-top:6px;padding:5px 8px;border:1px solid var(--line);border-radius:5px" placeholder="점검 결과 메모 (5W1H)" data-chg="audNote" data-id="' + a.id + '" data-no="' + E(it.no) + '" value="' + E(r.note || '') + '"></div>';
@@ -229,7 +232,7 @@
         return '<div style="border-bottom:1px solid var(--line);padding:10px 0"><div class="row" style="align-items:flex-start"><b class="mono" style="min-width:30px">' + E(i.no) + '</b><div style="flex:1"><b>' + E(i.q) + '</b>' + (i.knockout ? ' ' + Q.chip('과락', 'crit') : '') +
           '<div class="small muted">' + (i.sub ? E(i.sub) + ' · ' : '') + '배점 ' + E(i.points) + (i.clause ? ' · ISO ' + E(i.clause) : '') + '</div>' +
           (Array.isArray(i.criteria) ? '<ul class="small muted" style="margin:4px 0;padding-left:18px">' + i.criteria.map(function (c) { return '<li>' + E(c.score) + '점: ' + E(c.text) + '</li>'; }).join('') + '</ul>' : (i.criteria ? '<div class="small muted pre">' + E(i.criteria) + '</div>' : '')) +
-          (i.evidence ? '<div class="small">증빙: ' + E(i.evidence) + '</div>' : '') + '</div>' +
+          (i.evidence ? '<div class="small">증빙: ' + E(i.evidence) + '</div>' : '') + linkLine(i.no) + '</div>' +
           '<div style="min-width:180px"><select data-chg="ceSet" data-id="' + x.id + '" data-no="' + E(i.no) + '" style="width:100%;padding:5px;border:1px solid var(--line-2);border-radius:5px;' + (v !== null && v < full ? 'color:var(--crit)' : '') + '"><option value="">미평가</option><option value="NA"' + (r.na ? ' selected' : '') + '>해당없음</option>' +
           scoreOptions(i).map(function (o) { return '<option value="' + o.v + '"' + (!r.na && r.s !== null && r.s !== undefined && String(r.s) === String(o.v) ? ' selected' : '') + '>' + E(o.t.length > 40 ? o.t.slice(0, 40) + '…' : o.t) + '</option>'; }).join('') + '</select></div></div>' +
           '<div class="row" style="margin-top:6px"><input style="flex:1;padding:5px 8px;border:1px solid var(--line);border-radius:5px" placeholder="현황·증빙 위치·보완 계획" data-chg="ceNote" data-id="' + x.id + '" data-no="' + E(i.no) + '" value="' + E(r.note || '') + '">' +
@@ -237,6 +240,15 @@
       }).join('') + '</div>';
     });
     return h;
+  }
+  function linkLine(no) {
+    if (!Q.ssqStatus || !window.SEED.ssqLink) return '';
+    var st = Q.ssqStatus(no), lk = st.lk;
+    return '<div class="small" style="margin-top:4px">' + (lk.clauses || []).map(function (c) { return '<a class="chip acc" href="#/clauses/' + E(c) + '">ISO ' + E(c) + '</a>'; }).join(' ') + ' ' +
+      st.docs.map(function (d) { return '<a href="#/docs/' + E(d.code) + '">' + E(d.code) + '</a>'; }).join(' ') + ' ' +
+      Q.chip(st.n ? '기록 ' + st.n + '건' : '기록 없음', st.rec === 'ok' ? 'good' : st.rec === 'part' ? 'warn' : 'crit') +
+      (st.aud ? ' ' + Q.chip('내부심사 ' + st.aud.j, st.aud.j === 'L' ? 'good' : st.aud.j === 'H' ? 'crit' : 'warn') : '') +
+      ' <a href="#/link/' + E(no) + '">연동 상세 →</a>' + (lk.gap ? '<div style="color:var(--crit)">⚠ ' + E(lk.gap) + '</div>' : '') + (lk.gapFix ? '<div style="color:var(--warn)">＋ ' + E(lk.gapFix) + '</div>' : '') + '</div>';
   }
   function ceById(id) { return Q.S.registers.custEvals.filter(function (x) { return x.id === id; })[0]; }
   Q.on('ceSet', function (el) {
@@ -424,7 +436,7 @@
   /* ───────── 설정·백업 ───────── */
   Q.route('settings', '설정·백업', function () {
     var S = Q.S, size = Math.round(JSON.stringify(S).length / 1024);
-    var h = '<div class="grid g2"><div class="card"><h2>현재 사용자</h2><p class="small muted">기록 작성자·결재 이력에 남는 이름입니다.</p><div class="row">' + Q.input({ k: 'curUser', type: 'user' }, S.settings.user) + '<button class="btn pri" data-act="setUser">적용</button></div></div>' +
+    var h = '<div class="grid g2"><div class="card"><h2>현재 사용자</h2><p>' + E(S.settings.user || '-') + ' · ' + E(Q.perm ? Q.perm() : '') + '</p><p class="small muted">기록 작성자·결재 이력에 이 이름이 남습니다. 다른 사람으로 바꾸려면 로그아웃 후 다시 로그인하세요.</p><button class="btn" data-act="logout">로그아웃</button></div>' +
       '<div class="card"><h2>화면</h2><div class="row"><button class="btn" data-act="theme" data-t="light">밝게</button><button class="btn" data-act="theme" data-t="dark">어둡게</button><button class="btn" data-act="theme" data-t="auto">시스템 따라감</button></div></div></div>';
     h += '<div class="card"><h2>데이터 저장 위치 · 백업</h2><dl class="kv"><dt>저장 방식</dt><dd>' + (Q.native ? '데스크톱 앱 — 데이터 파일 <code>' + E(Q.native.dataPath()) + '</code>' : '브라우저 저장소 (이 PC·이 브라우저 전용)') + '</dd>' +
       '<dt>데이터 크기</dt><dd>' + size + ' KB' + (!Q.native && size > 4000 ? ' <span style="color:var(--warn)">— 브라우저 저장 한도(약 5MB)에 가까움. 사진이 많으면 데스크톱 앱 사용 권장</span>' : '') + '</dd>' +

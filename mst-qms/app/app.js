@@ -8,7 +8,7 @@
     var dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   };
-  Q.updateUserBadge = function () { var el = Q.$('#userBadge'); if (el) el.textContent = '👤 ' + (Q.S.settings.user || '사용자 선택'); };
+  Q.updateUserBadge = function () { var el = Q.$('#userBadge'); if (el) el.textContent = '👤 ' + (Q.S.settings.user || '-') + (Q.perm ? ' · ' + Q.perm() : ''); };
 
   /* ───────── 문서번호 자동 부여 ─────────
      수준 + ISO 조항 → 접두사(MP/MD/MI) + 장번호 2자리 + 일련번호 2자리 */
@@ -102,9 +102,7 @@
     Q.updateUserBadge();
     window.addEventListener('hashchange', Q.render);
     Q.render();
-    if (!Q.S.settings.user) setTimeout(function () {
-      Q.modal('사용자 선택', '<p>기록 작성자와 결재 이력에 남을 이름을 선택하세요. (설정에서 변경 가능)</p>' + Q.input({ k: 'u0', type: 'user' }, ''), [{ label: '나중에' }, { label: '확인', cls: 'pri', fn: function (m) { Q.S.settings.user = m.querySelector('[name="u0"]').value; Q.save(); Q.updateUserBadge(); } }]);
-    }, 300);
+    if (Q.needLogin()) Q.showLogin();
   }
   Q.on('menu', function () { Q.$('.side').classList.toggle('open'); });
   document.addEventListener('keydown', function (e) {

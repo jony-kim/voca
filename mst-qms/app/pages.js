@@ -21,7 +21,8 @@
     ['성과 평가'],
     ['kpi', 'KPI 성과지표', 'kpi'],
     ['audit', '내부심사', 'audit'],
-    ['custeval', '고객사 평가 대응'],
+    ['link', 'ISO ↔ 고객평가 연동'],
+    ['custeval', '세메스 SSQ 자체점검'],
     ['review', '경영검토'],
     ['역량·도구'],
     ['training', '교육훈련', 'train'],
@@ -98,6 +99,12 @@
       tile('내부심사 미결 지적', openF.length, a.audit.length ? a.audit.length + '건 기한 초과' : '총 ' + findings.length + '건 중', a.audit.length ? 'crit' : '', 'audit') +
       tile(m + ' KPI 달성', kIn.length ? kOk.length + '/' + kIn.length : '-', kIn.length ? '미달 ' + (kIn.length - kOk.length) + '건' : '실적 미입력', kIn.length && kOk.length < kIn.length ? 'warn' : (kIn.length ? 'good' : ''), 'kpi') +
       tile('ISO 조항 증거 충족', cov.pct + '%', cov.ok + '/' + cov.total + ' 조항', cov.pct >= 90 ? 'good' : (cov.pct >= 60 ? 'warn' : 'crit'), 'clauses') +
+      (Q.ssqStatus && window.SEED.custEval ? (function () {
+        var its = [].concat.apply([], window.SEED.custEval.sections.map(function (x) { return x.items; })).filter(function (i) { return !i.knockout; });
+        var both = its.filter(function (i) { var st = Q.ssqStatus(i.no); return st.std === 'ok' && st.rec !== 'none'; });
+        var pts = both.reduce(function (t, i) { return t + (Q.num(i.points) || 0); }, 0);
+        return tile('세메스 SSQ 준비도', pts + '점', '문서+기록 갖춘 항목 ' + both.length + '/' + its.length, pts >= 80 ? 'good' : pts >= 60 ? 'warn' : 'crit', 'link');
+      })() : '') +
       tile(thisYear + ' 교육 실시', trainDone.length, '계획 ' + (S.trainings || []).filter(function (t) { return t.status === '계획'; }).length + '건', '', 'training') +
       tile('작성된 기록', recCount + Object.keys(S.registers).reduce(function (s, k) { return s + (Array.isArray(S.registers[k]) ? S.registers[k].length : 0); }, 0), '양식 기록 + 관리대장', '', 'forms') +
       '</div>';
@@ -208,8 +215,12 @@
     var h = '<div class="card"><div class="row"><input id="sq" style="flex:1;padding:9px 12px;border:1px solid var(--line-2);border-radius:6px" placeholder="문서번호, 양식명, 부적합 내용, 설비명…" value="' + E(q) + '"><button class="btn pri" data-act="doSearch">검색</button></div></div>';
     if (!q) return h + '<div class="empty">문서·양식·기록·대장 전체를 검색합니다</div>';
     var res = [];
-    (Q.S.docs || []).forEach(function (d) { if (Q.match(d, q)) res.push(['문서', d.code + ' ' + d.title, 'docs/' + d.code]); });
-    (window.SEED.forms || []).forEach(function (f) { if (Q.match({ c: f.code, t: f.title }, q)) res.push(['양식', f.code + ' ' + f.title, 'forms/' + f.code]); });
+    (Q.S.docs || []).forEach(function (d) { if (Q.match(d, q)) res.push(['문서', d.code + ' ' + d.title + hit(d, q), 'docs/' + d.code]); });
+    (window.SEED.forms || []).forEach(function (f) { if (Q.match(f, q)) res.push(['양식', f.code + ' ' + f.title + hit(f, q), 'forms/' + f.code]); });
+    (Q.S.checklists || []).forEach(function (ck) { ck.sections.forEach(function (sc) { sc.items.forEach(function (it) { if (Q.match(it, q)) res.push(['심사 질문', ck.id + ' #' + it.no + ' ' + it.q, 'audit']); }); }); });
+    if (window.SEED.custEval) window.SEED.custEval.sections.forEach(function (sc) { sc.items.forEach(function (it) { if (Q.match(it, q) || Q.match((window.SEED.ssqLink || {})[it.no] || {}, q)) res.push(['SSQ 항목', it.no + '. ' + it.q, 'link/' + it.no]); }); });
+    (Q.S.kpis || []).forEach(function (k) { if (Q.match(k, q)) res.push(['KPI', k.name + ' — ' + (k.formula || ''), 'kpi']); });
+    (window.SEED.revisionLog || []).forEach(function (r) { if (Q.match(r, q)) res.push(['수정 내역', r.where + ': ' + r.before + ' → ' + r.after, 'docs/_revlog']); });
     Object.keys(Q.S.records).forEach(function (fc) { (Q.S.records[fc] || []).forEach(function (r) { if (Q.match(r, q)) res.push(['기록', fc + ' · ' + (r.title || r.date || ''), 'forms/' + fc + '/' + r.id]); }); });
     (Q.S.ncrs || []).forEach(function (n) { if (Q.match(n, q)) res.push(['부적합', n.no + ' ' + n.title, 'ncr/' + n.id]); });
     (Q.REG_LIST || []).forEach(function (rd) { (Q.S.registers[rd.key] || []).forEach(function (r) { if (Q.match(r, q)) res.push([rd.title, r[rd.titleKey] || '', 'reg/' + rd.key]); }); });
@@ -219,6 +230,15 @@
     return h + '<div class="card"><h2>검색 결과 <span class="chip">' + res.length + '</span></h2>' +
       Q.table([{ label: '구분', html: function (r) { return Q.chip(r[0], 'acc'); } }, { label: '항목', html: function (r) { return '<a href="#/' + E(r[2]) + '">' + E(r[1]) + '</a>'; } }], res, { empty: '"' + q + '" 검색 결과 없음' }) + '</div>';
   });
+  /* 검색어가 들어 있는 문장 일부를 보여 줌 */
+  function hit(o, q) {
+    var t = JSON.stringify(o).replace(/\\n/g, ' '), i = t.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return '';
+    t = t.replace(/"[a-zA-Z_]+":/g, ' ').replace(/https?:[^"]+/g, ' ').replace(/[^\S\n]+/g, ' ');
+    i = t.toLowerCase().indexOf(q.toLowerCase()); if (i < 0) return '';
+    var seg = t.slice(Math.max(0, i - 25), i + q.length + 35).replace(/["{}\[\],]/g, ' ').replace(/\s+/g, ' ');
+    return ' — …' + seg + '…';
+  }
   Q.routes.search.after = function () { var el = Q.$('#sq'); if (el) { el.focus(); el.addEventListener('keydown', function (e) { if (e.key === 'Enter') Q.actions.doSearch(); }); } };
   Q.on('doSearch', function () { Q.go('search/' + encodeURIComponent(Q.$('#sq').value.trim())); });
 
@@ -327,8 +347,9 @@
   function turtle(t, items) { items = Q.arr(items); return '<div class="card" style="margin:0;box-shadow:none;background:var(--surface-2)"><h3 style="margin-top:0">' + E(t) + '</h3>' + (items.length ? '<ul style="margin:0;padding-left:18px">' + items.map(function (i) { return '<li>' + E(i) + '</li>'; }).join('') + '</ul>' : '<span class="muted small">미정의 — 프로세스 오너가 정의 필요</span>') + '</div>'; }
 
   /* ───────── 문서 체계 ───────── */
-  Q.route('docs', function (a) { return a[0] ? (a[0] === '_issues' ? '문서 정합성 점검' : '문서 · ' + a[0]) : '문서 체계'; }, function (args) {
+  Q.route('docs', function (a) { return a[0] ? (a[0] === '_issues' ? '문서 정합성 점검' : a[0] === '_revlog' ? '원본 대비 수정 내역' : '문서 · ' + a[0]) : '문서 체계'; }, function (args) {
     if (args[0] === '_issues') return docIssues();
+    if (args[0] === '_revlog') return revLog();
     if (args[0]) return docDetail(Q.doc(args[0]));
     var st = Q.S.settings.docFilter || {};
     var list = (Q.S.docs || []).filter(function (d) {
@@ -337,6 +358,7 @@
     var lv = ['매뉴얼', '프로세스', '절차서', '지침서'];
     var h = '<div class="tiles">' + lv.map(function (l) { return '<div class="tile"><div class="k">' + l + '</div><div class="v">' + (Q.S.docs || []).filter(function (d) { return d.level === l; }).length + '</div></div>'; }).join('') +
       '<div class="tile"><div class="k">양식</div><div class="v">' + (window.SEED.forms || []).length + '</div></div>' +
+      '<div class="tile" data-go="docs/_revlog"><div class="k">원본 대비 수정</div><div class="v">' + (window.SEED.revisionLog || []).length + '</div><div class="s">오타·타사 명칭 정정 → 클릭</div></div>' +
       '<div class="tile ' + ((window.SEED.docIssues || []).length ? 'warn' : '') + '" data-go="docs/_issues"><div class="k">정합성 이슈</div><div class="v">' + (window.SEED.docIssues || []).filter(function (i) { return !(Q.S.settings.issueDone || {})[i.no]; }).length + '</div><div class="s">번호 중복·불일치 → 클릭</div></div></div>';
     h += '<div class="card"><div class="filters"><input data-inp="docQ" placeholder="번호·문서명·부서" value="' + E(st.q || '') + '">' +
       '<select data-chg="docLv"><option value="">전체 수준</option>' + lv.map(function (l) { return '<option' + (st.level === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select>' +
@@ -438,6 +460,18 @@
       Q.save(); Q.rerender();
     } }]);
   });
+  function revLog() {
+    var L = window.SEED.revisionLog || [], st = Q.S.settings.revQ || '';
+    var list = L.filter(function (r) { return Q.match(r, st); });
+    var kinds = {}; L.forEach(function (r) { kinds[r.kind] = (kinds[r.kind] || 0) + 1; });
+    return '<div class="row no-print" style="margin-bottom:12px"><a href="#/docs">← 문서 체계</a></div>' +
+      '<div class="tiles">' + Object.keys(kinds).map(function (k) { return '<div class="tile"><div class="k">' + E(k) + '</div><div class="v">' + kinds[k] + '</div></div>'; }).join('') + '</div>' +
+      '<div class="card"><h2>원본 대비 수정 내역 <span class="sp"></span><input data-chg="revQ" placeholder="검색" value="' + E(st) + '" style="padding:5px 9px;border:1px solid var(--line-2);border-radius:6px"><button class="btn sm" data-act="revCsv">CSV</button></h2>' +
+      '<p class="small muted">Drive 원본을 옮기면서 고친 오타, 다른 회사 명칭·문서번호, 적용 표준 표기입니다. 원본 파일(구글 시트)에도 같은 수정을 반영하세요.</p>' +
+      Q.table([{ label: '구분', html: function (r) { return Q.chip(r.kind, r.kind === '오타' ? '' : 'warn'); } }, { label: '위치', k: function (r) { return r.file.replace('seed-', '').replace('.js', '') + ' · ' + r.where; } }, { label: '수정 전', k: 'before' }, { label: '수정 후', k: 'after' }], list, { empty: '수정 내역 없음' }) + '</div>';
+  }
+  Q.on('revQ', function (el) { Q.S.settings.revQ = el.value; Q.rerender(); });
+  Q.on('revCsv', function () { Q.csv('원본대비_수정내역_' + Q.today() + '.csv', ['구분', '파일', '위치', '수정 전', '수정 후'], (window.SEED.revisionLog || []).map(function (r) { return [r.kind, r.file, r.where, r.before, r.after]; })); });
   function docIssues() {
     var done = Q.S.settings.issueDone || {};
     return '<div class="row no-print" style="margin-bottom:12px"><a href="#/docs">← 문서 체계</a></div><div class="card"><h2>원본 문서 간 정합성 이슈 <span class="sp"></span><span class="small muted">문서체계표 · 표준목록 · 매뉴얼 대조 결과</span></h2>' +
@@ -460,7 +494,7 @@
         (c.manual ? '<h3>MST 품질매뉴얼 규정</h3><p class="muted">' + E(c.manual) + '</p>' : '') + '</div>' +
         '<div class="grid g2"><div class="card"><h2>관련 문서</h2>' + Q.table([{ label: '번호', html: function (d) { return '<a href="#/docs/' + E(d.code) + '">' + E(d.code) + '</a>'; } }, { label: '문서명', k: 'title' }], docs, { empty: '연결 문서 없음' }) + '</div>' +
         '<div class="card"><h2>증거 (기록)</h2>' + Q.table([{ label: '출처', k: 'label' }, { label: '건수', n: 1, html: function (e) { return e.n ? '<b>' + e.n + '</b>' : '<span style="color:var(--crit)">0</span>'; } }], ev, { empty: '증거 출처 미정의' }) + '</div></div>' +
-        (cks.length ? '<div class="card"><h2>내부심사 체크 질문</h2><ol>' + cks.map(function (i) { return '<li>' + E(i.q) + '</li>'; }).join('') + '</ol></div>' : '');
+        (cks.length ? '<div class="card"><h2>내부심사 체크 질문</h2><ol>' + cks.map(function (i) { return '<li>' + E(i.q) + '</li>'; }).join('') + '</ol></div>' : '') + ssqCard(c.no);
     }
     var cov = Q.coverage();
     return '<div class="tiles">' + cov.byChapter.map(function (c) { return '<div class="tile ' + (c.pct >= 90 ? 'good' : c.pct >= 60 ? 'warn' : 'crit') + '"><div class="k">' + c.ch + '. ' + c.title + '</div><div class="v">' + c.pct + '%</div><div class="s">' + c.ok + '/' + c.total + ' 조항 증거 있음</div></div>'; }).join('') + '</div>' +
@@ -472,6 +506,16 @@
         { label: '증거', html: function (c) { var ev = Q.clauseEvidence(c.no), n = ev.reduce(function (s, e) { return s + e.n; }, 0); return ev.length ? (n ? Q.chip(n + '건', 'good') : Q.chip('없음', 'crit')) : Q.chip('-', ''); } }
       ], cls, { rowAttr: function (c) { return ' class="click" data-go="clauses/' + E(c.no) + '"'; } }) + '</div>';
   });
+
+  function ssqCard(no) {
+    if (!Q.ssqForClause || !window.SEED.custEval) return '';
+    var xs = Q.ssqForClause(no); if (!xs.length) return '';
+    return '<div class="card"><h2>연동된 고객 평가 항목 (' + E(window.SEED.custEval.customer) + ' SSQ) <span class="chip">' + xs.length + '</span></h2>' + Q.table([
+      { label: 'SSQ', html: function (x) { return '<a href="#/link/' + E(x.i.no) + '"><b class="mono">' + E(x.i.no) + '</b></a>'; } }, { label: '평가 항목', k: function (x) { return x.i.q; } }, { label: '배점', n: 1, k: function (x) { return x.i.points; } },
+      { label: '문서 / 기록', html: function (x) { var st = Q.ssqStatus(x.i.no); return Q.chip(st.std === 'ok' ? '문서 있음' : st.std === 'part' ? '개정중' : '문서 없음', st.std === 'ok' ? 'good' : st.std === 'part' ? 'warn' : 'crit') + ' ' + Q.chip(st.n + '건', st.rec === 'ok' ? 'good' : st.rec === 'part' ? 'warn' : 'crit'); } },
+      { label: '자체점검', k: function (x) { var s = Q.ssqStatus(x.i.no).score; return s === undefined || s === null ? '-' : s; } }
+    ], xs) + '</div>';
+  }
 
   /* ───────── KPI ───────── */
   Q.route('kpi', 'KPI 성과지표', function (args) {

@@ -336,7 +336,17 @@
     if (f.approval) p.push('<b>결재</b>: ' + E(f.approval.join(' / ')));
     if (f.retention) p.push('<b>보존</b>: ' + E(f.retention));
     if (f.url) p.push('<a href="' + E(f.url) + '" target="_blank" rel="noopener">원본 양식 열기</a>');
-    return p.length ? '<p class="small">' + p.join('<br>') + '</p>' : '';
+    return p.length ? '<p class="small">' + p.join('<br>') + '</p>' + blankForm(f) : '';
+  }
+  /* 빈 양식 미리보기 — 원본 양식 구조(머리 항목·표·고정 항목·결재)를 종이 양식처럼 */
+  function blankForm(f) {
+    if (!(f.cols && f.cols.length) && !(f.header && f.header.length)) return '';
+    var cols = colsOf(f), items = f.items || [];
+    var rows = items.length ? items.map(function (it) { var o = {}; o[cols[0].k] = typeof it === 'string' ? it : it.text; if (it.std && cols[1]) o[cols[1].k] = it.std; return o; }) : [{}, {}, {}, {}];
+    return '<details' + (items.length ? ' open' : '') + ' style="margin-top:12px"><summary class="small"><b>양식 미리보기</b> (고정 항목 ' + items.length + '개)</summary><div style="border:1px solid var(--line-2);border-radius:6px;padding:14px;margin-top:8px;background:var(--surface)">' +
+      '<div class="row" style="align-items:flex-start"><div style="flex:1"><div class="small muted">' + E(Q.S.company.name) + '</div><b style="font-size:17px">' + E(f.title) + '</b><div class="small mono muted">' + E(f.code) + '</div></div>' + Q.approvalBox(f.approval || ['작성', '검토', '승인']) + '</div>' +
+      '<table class="tbl" style="margin:10px 0"><tbody><tr>' + [{ label: '작성일' }].concat(f.header || []).map(function (h) { return '<th style="width:1%">' + E(h.label) + '</th><td>' + (h.options ? '<span class="small muted">' + E(h.options.join(' / ')) + '</span>' : '') + '</td>'; }).join('</tr><tr>') + '</tr></tbody></table>' +
+      Q.table(cols.map(function (c) { return { label: c.label, html: function (r) { return r[c.k] !== undefined ? E(r[c.k]) : (c.options ? '<span class="small muted">' + E(c.options.join(' / ')) + '</span>' : ''); } }; }), rows) + '</div></details>';
   }
   function hdrFields(f) {
     var base = [{ k: 'date', label: '작성일', type: 'date', def: Q.today(), req: true }, { k: 'title', label: '제목/대상', req: true }];

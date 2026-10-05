@@ -299,7 +299,7 @@
   Q.statusChip = function (s) {
     var map = { '완료': 'good', '종결': 'good', '승인': 'good', '적합': 'good', '달성': 'good', '유효': 'good', '합격': 'good',
       '진행': 'acc', '진행중': 'acc', '검토': 'acc', '계획': 'acc', '조치중': 'acc', '개정중': 'warn',
-      '지연': 'crit', '부적합': 'crit', '미달': 'crit', '기한초과': 'crit', '불합격': 'crit', '만료': 'crit',
+      '지연': 'crit', '제정 예정': 'warn', '부적합': 'crit', '미달': 'crit', '기한초과': 'crit', '불합격': 'crit', '만료': 'crit',
       '관찰': 'warn', '접수': 'warn', '임박': 'warn', '보류': 'warn' };
     return Q.chip(s || '-', map[s] || '');
   };
